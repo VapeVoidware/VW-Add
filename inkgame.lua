@@ -41,7 +41,7 @@ pcall(function()
     end
 end)
 
---[[task.spawn(function()
+task.spawn(function()
     pcall(function()
         if not isfile("Local_VW_Update_Log.json") then
             shared.UpdateLogBypass = true
@@ -49,7 +49,7 @@ end)
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VWExtra/main/VWUpdateLog.lua", true))()
         shared.UpdateLogBypass = nil
     end)
-end)--]]
+end)
 
 --// Library \\--
 local repo = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/"
