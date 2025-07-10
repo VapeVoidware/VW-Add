@@ -770,7 +770,7 @@ Script.Functions.GetHumanoid = function()
 end
 
 Script.Functions.GetFork = function()
-    return lplr.Character:FindFirstChild("Fork") or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild("Fork")
+    return (lplr.Character:FindFirstChild("Fork") or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild("Fork")) or (lplr.Character:FindFirstChild("Bottle") or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild("Bottle"))
 end
 
 Script.Functions.FireForkRemote = function()
