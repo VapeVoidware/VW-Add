@@ -769,8 +769,17 @@ Script.Functions.GetHumanoid = function()
     return rp
 end
 
+local tools = {"Fork", "Bottle", "Knife"}
 Script.Functions.GetFork = function()
-    return (lplr.Character:FindFirstChild("Fork") or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild("Fork")) or (lplr.Character:FindFirstChild("Bottle") or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild("Bottle"))
+    local res
+    for _, index in pairs(tools) do
+        local tool = lplr.Character:FindFirstChild(index) or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild(index)
+        if tool then
+            res = tool
+            break
+        end
+    end
+    return res
 end
 
 Script.Functions.FireForkRemote = function()
