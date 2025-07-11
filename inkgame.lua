@@ -1277,6 +1277,8 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun") do
                     local character = lplr.Character
                     local root = character and (character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso"))
                     if root then
+                        local gs = Script.GameState
+                        local isActiveGame = gs and gs ~= "" and States[gs] ~= nil
                         for _, part in pairs(character:GetDescendants()) do
                             if part:IsA("BodyMover") or part:IsA("BodyVelocity") or part:IsA("BodyGyro") or part:IsA("BodyThrust") or part:IsA("BodyAngularVelocity") then
                                 part:Destroy()
@@ -1293,7 +1295,7 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun") do
                         end
                         if not lastSafeCFrame or (root.Position - lastSafeCFrame.Position).Magnitude < 20 then
                             lastSafeCFrame = root.CFrame
-                        elseif (root.Position - lastSafeCFrame.Position).Magnitude > 50 then -- threshold for being flung
+                        elseif isActiveGame and (root.Position - lastSafeCFrame.Position).Magnitude > 50 then
                             root.CFrame = lastSafeCFrame
                             root.Velocity = Vector3.zero
                         end
