@@ -1269,11 +1269,13 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun") do
     
     Toggles.AntiFlingToggle:OnChanged(function(call)
         if call then
+            Script.Temp.PauseAntiFling = nil
             Script.Functions.Alert("Anti Fling Enabled", 3)
             Script.Temp.AntiFlingActive = true
             Script.Temp.AntiFlingLoop = task.spawn(function()
                 local lastSafeCFrame = nil
                 while Script.Temp.AntiFlingActive and not Library.Unloaded do
+                    if Script.Temp.PauseAntiFling then return end
                     local character = lplr.Character
                     local root = character and (character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso"))
                     if root then
@@ -2024,13 +2026,13 @@ end)
 Toggles.SpeedToggle:OnChanged(function(call)
     if call then
         Script.Functions.Alert("Speed Enabled", 3)
+        Script.Temp.OldSpeed = lplr.Character.Humanoid.WalkSpeed
         task.spawn(function()
             repeat
                 task.wait(0.5)
                 if not lplr.Character then return end
                 if not lplr.Character:FindFirstChild("Humanoid") then return end
                 if call then
-                    Script.Temp.OldSpeed = lplr.Character.Humanoid.WalkSpeed
                     lplr.Character.Humanoid.WalkSpeed = Options.SpeedSlider.Value
                 else
                     lplr.Character.Humanoid.WalkSpeed = Script.Temp.OldSpeed or 23
@@ -2039,8 +2041,9 @@ Toggles.SpeedToggle:OnChanged(function(call)
         end)
     else
         Script.Functions.Alert("Speed Disabled", 3)
+        lplr.Character.Humanoid.WalkSpeed = Script.Temp.OldSpeed or 23
     end
-end)    
+end)  
 
 local controlModule
 
