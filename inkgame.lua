@@ -1514,7 +1514,13 @@ local MingleGroup = Tabs.Main:AddLeftGroupbox("Mingle") do
 end
 
 local GlassBridgeGroup = Tabs.Main:AddLeftGroupbox("Glass Bridge") do
-    GlassBridgeGroup:AddButton("Complete Glass Bridge Game", Script.Functions.WinGlassBridge)
+    GlassBridgeGroup:AddButton("Complete Glass Bridge Game", function()
+        if not workspace:FindFirstChild("GlassBridge") then
+            Script.Functions.Alert("Game not running")
+            return
+        end
+        Script.Functions.WinGlassBridge()
+    end)
     GlassBridgeGroup:AddButton("Reveal Glass Bridge", function()
         if not workspace:FindFirstChild("GlassBridge") then
             Script.Functions.Alert("Game not running")
@@ -1881,6 +1887,43 @@ local PlayerGroupBox = Tabs.Main:AddLeftGroupbox("Player") do
     })
 end
 
+function Script.Functions.HookShittyAntiFlingDetection()
+    if not lplr.Character then return end
+    if not Toggles.FlingAuraToggle.Value then return end
+    if Script.Temp.MainScriptHook then
+        pcall(function()
+            Script.Temp.MainScriptHook:Disconnect()
+        end)
+    end
+    local Main = lplr.Character:WaitForChild("Main")
+    if Main.Enabled then
+        Script.Functions.Alert("Patched the Ink Game shitty Anti Fling :omegalul:", 1)
+    end
+    pcall(function()
+        Main.Enabled = false
+        Main.Disabled = true
+    end)
+    Script.Temp.MainScriptHook = Main:GetPropertyChangedSignal("Enabled"):Connect(function()
+        Main.Enabled = false
+        Main.Disabled = true
+    end)
+end
+
+Library:GiveSignal(lplr.CharacterAdded:Connect(Script.Functions.HookShittyAntiFlingDetection))
+pcall(Script.Functions.HookShittyAntiFlingDetection)
+
+function Script.Functions.RevertAntiFlingDetection()
+    if Script.Temp.MainScriptHook then
+        pcall(function()
+            Script.Temp.MainScriptHook:Disconnect()
+        end)
+    end
+    if not lplr.Character then return end
+    local Main = lplr.Character:WaitForChild("Main")
+    Main.Enabled = true
+    Main.Disabled = false
+end
+
 Toggles.FlingAuraToggle:OnChanged(function(enabled)
     local function setNoclip(state)
         if Toggles.Noclip.Value ~= state then
@@ -1900,6 +1943,7 @@ Toggles.FlingAuraToggle:OnChanged(function(enabled)
     if enabled then
         Script.Functions.Alert("Fling Aura Enabled", 3)
         Script.Temp.FlingAuraActive = true
+        Script.Functions.HookShittyAntiFlingDetection()
         setNoclip(true)
         local player = lplr
         local function getRoot(character)
@@ -1932,6 +1976,7 @@ Toggles.FlingAuraToggle:OnChanged(function(enabled)
         end)
     else
         Script.Functions.Alert("Fling Aura Disabled", 3)
+        Script.Functions.RevertAntiFlingDetection()
         stopFlingAura()
     end
 end)
@@ -2317,6 +2362,7 @@ Library:OnUnload(function()
             conn:Disconnect()
         end)
     end
+    pcall(Script.Functions.RevertAntiFlingDetection)
     SaveManager:Save()
     Library.Unloaded = true
     getgenv().voidware_loaded = false
@@ -2341,6 +2387,15 @@ CreditsGroup:AddLabel("Inf Yield")
 CreditsGroup:AddLabel("Please notify me if you need \n credits (erchodev#0 on discord)")
 
 Library.ToggleKeybind = Options.MenuKeybind
+
+Toggles.KeybindMenuOpen:OnChanged(function(call)
+    if call then
+        if Services.UserInputService.TouchEnabled and not Services.UserInputService.KeyboardEnabled and not Services.UserInputService.MouseEnabled then
+            Script.Functions.Alert("Keybind Menu Disabled on mobile", 1.5)
+            Toggles.KeybindMenuOpen:SetValue(false)
+        end
+    end
+end)
 
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
