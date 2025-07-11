@@ -951,19 +951,46 @@ function Script.Functions.SetupOtherPlayerConnection(player: Player)
     end))
 end
 
+function Script.Functions.DisableAntiFling()
+    if Toggles.AntiFlingToggle.Value then
+        Toggles.AntiFlingToggle:SetValue(false)
+    end
+end
+
+function Script.Functions.EnableAntiFling()
+    if not Toggles.AntiFlingToggle.Value then
+        Toggles.AntiFlingToggle:SetValue(true)
+    end
+end
+
 function Script.Functions.WinRLGL()
     if not lplr.Character then return end
+    local call = Toggles.AntiFlingToggle.Value
+    Script.Functions.DisableAntiFling()
     lplr.Character:PivotTo(CFrame.new(Vector3.new(-100.8, 1030, 115)))
+    if call then
+        task.delay(0.5, Script.Functions.EnableAntiFling)
+    end
 end
 
 function Script.Functions.TeleportSafe()
     if not lplr.Character then return end
+    local call = Toggles.AntiFlingToggle.Value
+    Script.Functions.DisableAntiFling()
     lplr.Character:PivotTo(CFrame.new(Vector3.new(-108, 329.1, 462.1)))
+    if call then
+        task.delay(0.5, Script.Functions.EnableAntiFling)
+    end
 end
 
 function Script.Functions.WinGlassBridge()
     if not lplr.Character then return end
-    Script.Functions.WinGlassBridge()
+    local call = Toggles.AntiFlingToggle.Value
+    Script.Functions.DisableAntiFling()
+    lplr.Character:PivotTo(CFrame.new(Vector3.new(-203.9, 520.7, -1534.3485)))
+    if call then
+        task.delay(0.5, Script.Functions.EnableAntiFling)
+    end
 end
 
 local MAIN_ESP_META = {
@@ -1235,61 +1262,6 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun") do
         Default = false
     })
     
-    Toggles.FlingAuraToggle:OnChanged(function(enabled)
-        local function setNoclip(state)
-            if Toggles.Noclip.Value ~= state then
-                Toggles.Noclip:SetValue(state)
-            end
-        end
-
-        local function stopFlingAura()
-            Script.Temp.FlingAuraActive = false
-            setNoclip(false)
-            if Script.Temp.FlingAuraDeathConn then
-                Script.Temp.FlingAuraDeathConn:Disconnect()
-                Script.Temp.FlingAuraDeathConn = nil
-            end
-        end
-
-        if enabled then
-            Script.Functions.Alert("Fling Aura Enabled", 3)
-            Script.Temp.FlingAuraActive = true
-            setNoclip(true)
-            local player = lplr
-            local function getRoot(character)
-                return character and (character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso"))
-            end
-            local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-            if humanoid then
-                Script.Temp.FlingAuraDeathConn = humanoid.Died:Connect(stopFlingAura)
-            end
-            task.spawn(function()
-                local movel = 0.1
-                while Script.Temp.FlingAuraActive and not Library.Unloaded do
-                    local character = player.Character
-                    local root = getRoot(character)
-                    if character and character.Parent and root and root.Parent then
-                        local originalVel = root.Velocity
-                        root.Velocity = originalVel * 10000 + Vector3.new(0, 10000, 0)
-                        RunService.RenderStepped:Wait()
-                        if character and character.Parent and root and root.Parent then
-                            root.Velocity = originalVel
-                        end
-                        RunService.Stepped:Wait()
-                        if character and character.Parent and root and root.Parent then
-                            root.Velocity = originalVel + Vector3.new(0, movel, 0)
-                            movel = -movel
-                        end
-                    end
-                    RunService.Heartbeat:Wait()
-                end
-            end)
-        else
-            Script.Functions.Alert("Fling Aura Disabled", 3)
-            stopFlingAura()
-        end
-    end)
-    
     FunGroupBox:AddToggle("AntiFlingToggle", {
         Text = "Anti Fling",
         Default = false
@@ -1371,6 +1343,11 @@ local GreenLightRedLightGroup = Tabs.Main:AddLeftGroupbox("Red Light / Green Lig
     local RLGL_OriginalNamecall
     Toggles.RedLightGodmode:OnChanged(function(enabled)
         if enabled then
+            if not hookmetamethod then
+                Script.Functions.Alert("Your executor doesn't support this :(")
+                Toggles.RedLightGodMode:SetValue(false)
+                return
+            end
             local TrafficLightImage = lplr.PlayerGui:FindFirstChild("ImpactFrames") and lplr.PlayerGui.ImpactFrames:FindFirstChild("TrafficLightEmpty")
             local ReplicatedStorage = game:GetService("ReplicatedStorage")
             local lastRootPartCFrame = nil
@@ -1460,7 +1437,7 @@ end
 Toggles.ImmuneDalgonaGame:OnChanged(function(call)
     if call then
         if not hookmetamethod then
-            Script.Functions.Alert("Your executor doesn't suport this function", 5)
+            Script.Functions.Alert("Your executor doesn't suport this function :(", 5)
             Toggles.ImmuneDalgonaGame:SetValue(false)
             return
         end
@@ -1535,9 +1512,7 @@ local MingleGroup = Tabs.Main:AddLeftGroupbox("Mingle") do
 end
 
 local GlassBridgeGroup = Tabs.Main:AddLeftGroupbox("Glass Bridge") do
-    GlassBridgeGroup:AddButton("Complete Glass Bridge Game", function()
-        lplr.Character:PivotTo(CFrame.new(Vector3.new(-203.9, 520.7, -1534.3485)))
-    end)
+    GlassBridgeGroup:AddButton("Complete Glass Bridge Game", Script.Functions.WinGlassBridge)
     GlassBridgeGroup:AddButton("Reveal Glass Bridge", function()
         if not workspace:FindFirstChild("GlassBridge") then
             Script.Functions.Alert("Game not running")
@@ -1903,6 +1878,61 @@ local PlayerGroupBox = Tabs.Main:AddLeftGroupbox("Player") do
         Compact = true,
     })
 end
+
+Toggles.FlingAuraToggle:OnChanged(function(enabled)
+    local function setNoclip(state)
+        if Toggles.Noclip.Value ~= state then
+            Toggles.Noclip:SetValue(state)
+        end
+    end
+
+    local function stopFlingAura()
+        Script.Temp.FlingAuraActive = false
+        setNoclip(false)
+        if Script.Temp.FlingAuraDeathConn then
+            Script.Temp.FlingAuraDeathConn:Disconnect()
+            Script.Temp.FlingAuraDeathConn = nil
+        end
+    end
+
+    if enabled then
+        Script.Functions.Alert("Fling Aura Enabled", 3)
+        Script.Temp.FlingAuraActive = true
+        setNoclip(true)
+        local player = lplr
+        local function getRoot(character)
+            return character and (character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso"))
+        end
+        local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+        if humanoid then
+            Script.Temp.FlingAuraDeathConn = humanoid.Died:Connect(stopFlingAura)
+        end
+        task.spawn(function()
+            local movel = 0.1
+            while Script.Temp.FlingAuraActive and not Library.Unloaded do
+                local character = player.Character
+                local root = getRoot(character)
+                if character and character.Parent and root and root.Parent then
+                    local originalVel = root.Velocity
+                    root.Velocity = originalVel * 10000 + Vector3.new(0, 10000, 0)
+                    RunService.RenderStepped:Wait()
+                    if character and character.Parent and root and root.Parent then
+                        root.Velocity = originalVel
+                    end
+                    RunService.Stepped:Wait()
+                    if character and character.Parent and root and root.Parent then
+                        root.Velocity = originalVel + Vector3.new(0, movel, 0)
+                        movel = -movel
+                    end
+                end
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    else
+        Script.Functions.Alert("Fling Aura Disabled", 3)
+        stopFlingAura()
+    end
+end)
 
 Toggles.Fly:SetVisible(false)
 Options.FlySpeed:SetVisible(false)
