@@ -73,6 +73,7 @@ local Window = Library:CreateWindow({
 
 local Tabs = {
 	Main = Window:AddTab("Main"),
+    Misc = Window:AddTab("Misc"),
     Visuals = Window:AddTab("Visuals"),
 	["UI Settings"] = Window:AddTab("UI Settings"),
 }
@@ -120,7 +121,66 @@ local Services = setmetatable({}, {
 	end
 })
 
+local SharedFunctions = {}
+
+function SharedFunctions.GetBoosts(arg1, arg2, arg3)
+    local boosts = arg1 and arg1:FindFirstChild("Boosts")
+    if boosts then
+        local boostVal = boosts:FindFirstChild(arg2)
+        if boostVal then
+            if arg2 == "Faster Sprint" then
+                return 1.5 * boostVal.Value
+            elseif arg2 == "Damage Boost" then
+                return 0.1 * boostVal.Value
+            else
+                return 0.1 * boostVal.Value
+            end
+        end
+    end
+    return 0
+end
+
+function SharedFunctions.Invisible(arg1, arg2, arg3)
+    for _, part in ipairs(arg1:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            if arg2 == 1 then
+                part.Transparency = 1
+            else
+                part.Transparency = 1
+            end
+            if arg3 then
+                part.CanCollide = false
+            end
+        end
+    end
+end
+
+function SharedFunctions.CreateFolder(parent, name, lifetime, opts)
+    local Folder = Instance.new("Folder")
+    Folder.Name = name
+    if opts then
+        if opts.ObjectValue then
+            Folder.Value = opts.ObjectValue
+        end
+        if opts.Attributes then
+            for k, v in pairs(opts.Attributes) do
+                Folder:SetAttribute(k, v)
+            end
+        end
+    end
+    Folder.Parent = parent
+    if lifetime then
+        task.delay(lifetime, function()
+            if Folder and Folder.Parent then
+                Folder:Destroy()
+            end
+        end)
+    end
+    return Folder
+end
+
 local Players = Services.Players
+local Lighting = Services.Lighting
 local RunService = Services.RunService
 local HttpService = Services.HttpService
 local TweenService = Services.TweenService
@@ -439,7 +499,7 @@ Script.Functions.PullRope = function(perfect)
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("TemporaryReachedBindable"):FireServer(unpack(args))
 end
 
-Script.Functions.RevealGlassBridge = function()
+function Script.Functions.RevealGlassBridge()
     local Effects = Script.Functions.SafeRequire(ReplicatedStorage.Modules.Effects) or {
         AnnouncementTween = function(args)
             Script.Functions.Alert(args.AnnouncementDisplayText, args.DisplayTime)
@@ -456,6 +516,11 @@ Script.Functions.RevealGlassBridge = function()
         for _, tileModel in pairs(tilePair:GetChildren()) do
             if tileModel:IsA("Model") and tileModel.PrimaryPart then
                 local primaryPart = tileModel.PrimaryPart
+                for _, child in ipairs(tileModel:GetChildren()) do
+                    if child:IsA("Highlight") then
+                        child:Destroy()
+                    end
+                end
                 local isBreakable = primaryPart:GetAttribute("exploitingisevil") == true
 
                 local targetColor = isBreakable and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 0)
@@ -520,7 +585,6 @@ end
 Script.Functions.BypassRagdoll = function()
     local Players = game:GetService("Players")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local SharedFunctions = Script.Functions.SafeRequire(ReplicatedStorage.Modules.SharedFunctions)
 
     local LocalPlayer = Players.LocalPlayer
     local Character = LocalPlayer.Character
@@ -607,8 +671,6 @@ Script.Functions.BypassRagdoll = function()
 end
 
 Script.Functions.BypassDalgonaGame = function()
-    local SharedFunctions = Script.Functions.SafeRequire(ReplicatedStorage.Modules.SharedFunctions)
-
     local LocalPlayer = Players.LocalPlayer
     local Character = LocalPlayer.Character
     local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
@@ -902,7 +964,7 @@ Script.Functions.RestoreVisibility = function(character)
     local humanoid = character:FindFirstChildOfClass("Humanoid")
 
     for _, part in pairs(character:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" and part.Name ~= "BoneCustom" then
             if part.Transparency >= 0.99 or part.LocalTransparencyModifier >= 0.99 then
                 wasInvisible = true
                 part.Transparency = 0
@@ -913,6 +975,9 @@ Script.Functions.RestoreVisibility = function(character)
 
     pcall(function()
         character.HumanoidRootPart.Transparency = 1
+    end)
+    pcall(function()
+        character.Head.BoneCustom.Transparency = 1
     end)
 
     for _, item in pairs(character:GetChildren()) do
@@ -1022,7 +1087,7 @@ local MAIN_ESP_META = {
             if not live then return end
             for _, descendant in pairs(live:GetChildren()) do
                 if descendant:IsA("Model") and descendant.Parent and descendant.Parent.Name == "Live" and descendant:FindFirstChild("TypeOfGuard") then
-                    if string.find(descendant.Name, "Guard") then
+                    if string.find(descendant.Name, "RebelGuard") then
                         Script.Functions.GuardESP(descendant)
                     end
                 end
@@ -1030,7 +1095,7 @@ local MAIN_ESP_META = {
         end,
         descendantcheck = function(descendant)
             if descendant:IsA("Model") and descendant.Parent and descendant.Parent.Name == "Live" and descendant:FindFirstChild("TypeOfGuard") then
-                if string.find(descendant.Name, "Guard") then
+                if string.find(descendant.Name, "RebelGuard") then
                     Script.Functions.GuardESP(descendant)
                 end
             end
@@ -1331,9 +1396,330 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun") do
             task.spawn(function()
                 repeat
                     task.wait(0.5)
+                    if Script.GameState == "RedLightGreenLight" then return end
                     Script.Functions.FireForkRemote()
+                    local args = {
+                        CFrame.new(lplr.Character.HumanoidRootPart.Position)
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("rootCFrame"):FireServer(unpack(args))                  
                 until not Toggles.KillauraInkGame.Value or Library.Unloaded
             end)
+        end
+    end)
+
+    FunGroupBox:AddToggle("GhostMode", {
+        Text = "Ghost Mode",
+        Default = false
+    })
+
+    Toggles.GhostMode:OnChanged(function(enabled)
+        if enabled then
+            Script.Functions.Alert("Ghost Mode Activated", 3)
+            Script.Temp.GhostModeEnabled = true
+            
+            local function setupGhostAppearance()
+                local character = lplr.Character
+                if not character then return end
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                if not rootPart then return end
+                
+                rootPart.Transparency = 0.4
+                rootPart.Color = Color3.fromRGB(200, 200, 255)
+                rootPart.Material = Enum.Material.Neon
+            end
+
+            local function hideCharacterParts()
+                local character = lplr.Character
+                if not character then return end
+                
+                for _, child in ipairs(character:GetDescendants()) do
+                    if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
+                        child.LocalTransparencyModifier = 1
+                    elseif child:IsA("Decal") then
+                        child.Transparency = 1
+                    elseif child:IsA("LayerCollector") then
+                        child.Enabled = false
+                    end
+                end
+            end
+
+            setupGhostAppearance()
+            hideCharacterParts()
+
+            Script.Temp.GhostModeLoop = RunService.Heartbeat:Connect(function()
+                if not Script.Temp.GhostModeEnabled then return end
+                
+                local character = lplr.Character
+                if not character then return end
+                
+                local humanoid = character:FindFirstChild("Humanoid")
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                if not humanoid or not rootPart or humanoid.RigType == Enum.HumanoidRigType.R6 then return end
+                
+                for _, child in ipairs(character:GetDescendants()) do
+                    if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
+                        child.LocalTransparencyModifier = 1
+                    elseif child:IsA("Decal") then
+                        child.Transparency = 1
+                    elseif child:IsA("LayerCollector") then
+                        child.Enabled = false
+                    end
+                end
+                
+                local originalCFrame = rootPart.CFrame
+                local originalCameraOffset = humanoid.CameraOffset
+
+                local floatingOffset = Vector3.new(0, humanoid.HipHeight + (rootPart.Size.Y / 2) - 0.8, 0)
+                rootPart.CFrame = (rootPart.CFrame - floatingOffset) * CFrame.Angles(0, 0, math.rad(180))
+                humanoid.CameraOffset = Vector3.new(0, -4.5, 0)
+                
+                local ghostAnimation = Instance.new("Animation")
+                ghostAnimation.AnimationId = "http://www.roblox.com/asset/?id=11360825341"
+                local animationTrack = humanoid.Animator:LoadAnimation(ghostAnimation)
+                animationTrack.Priority = Enum.AnimationPriority.Action4
+                animationTrack:Play()
+                animationTrack.TimePosition = 0.15
+                animationTrack:AdjustSpeed(0)
+                
+                RunService.RenderStepped:Wait()
+                animationTrack:Stop()
+                
+                humanoid.CameraOffset = originalCameraOffset
+                rootPart.CFrame = originalCFrame
+            end)
+
+            Script.Temp.GhostModeRespawn = lplr.CharacterAdded:Connect(function()
+                if Script.Temp.GhostModeEnabled then
+                    task.wait(0.6)
+                    if Toggles.GhostMode.Value then
+                        Toggles.GhostMode:SetValue(false)
+                        Toggles.GhostMode:SetValue(true)
+                    end
+                end
+            end)
+        else
+            Script.Functions.Alert("Ghost Mode Deactivated", 3)
+            Script.Temp.GhostModeEnabled = false
+            
+            if Script.Temp.GhostModeLoop then
+                Script.Temp.GhostModeLoop:Disconnect()
+                Script.Temp.GhostModeLoop = nil
+            end
+            
+            if Script.Temp.GhostModeRespawn then
+                Script.Temp.GhostModeRespawn:Disconnect()
+                Script.Temp.GhostModeRespawn = nil
+            end
+
+            local function restoreCharacterAppearance()
+                local character = lplr.Character
+                if not character then return end
+                
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    rootPart.Transparency = 1
+                end
+                
+                for _, child in ipairs(character:GetDescendants()) do
+                    if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
+                        child.LocalTransparencyModifier = 0
+                    elseif child:IsA("Decal") then
+                        child.Transparency = 0
+                    elseif child:IsA("LayerCollector") then
+                        child.Enabled = true
+                    end
+                end
+            end
+
+            restoreCharacterAppearance()
+        end
+    end)
+
+    FunGroupBox:AddToggle("LightningGodAwakening", {
+        Text = "Lightning God Awakening",
+        Default = false
+    })
+
+    Toggles.LightningGodAwakening:OnChanged(function(enabled)
+        if enabled then
+            Script.Functions.Alert("Lightning God Awakening Enabled", 3)
+            Script.Temp.LightningGodEnabled = true
+            
+            local function executeLightningGodEffect()
+                local character = lplr.Character
+                if not character then return end
+                
+                local LightningGodModule = Script.Functions.SafeRequire(ReplicatedStorage.Modules.AbilityEffectsModules.LIGHTNINGGODAWAKENINGCLIENTEFFECTS)
+                if not LightningGodModule then
+                    Script.Functions.Alert("Lightning God module not found!", 3)
+                    return
+                end
+                
+                local InterruptedFolder = Instance.new("Folder")
+                InterruptedFolder.Name = "LightningGodInterrupted"
+                InterruptedFolder.Parent = character
+                
+                local success, err = pcall(function()
+                    LightningGodModule({
+                        InterruptedFolder = InterruptedFolder,
+                        Character = character,
+                        ModuleName = "LIGHTNINGGODAWAKENING",
+                        TimeLength = 5
+                    })
+                end)
+                
+                if not success then
+                    Script.Functions.Alert("Failed to execute Lightning God effect: " .. tostring(err), 3)
+                else
+                    Script.Functions.Alert("Lightning God Awakening executed!", 3)
+                end
+                
+                task.delay(6, function()
+                    if InterruptedFolder and InterruptedFolder.Parent then
+                        InterruptedFolder:Destroy()
+                    end
+                end)
+            end
+            
+            executeLightningGodEffect()
+            
+            Script.Temp.LightningGodLoop = task.spawn(function()
+                repeat
+                    task.wait(10)
+                    if Script.Temp.LightningGodEnabled then
+                        executeLightningGodEffect()
+                    end
+                until not Script.Temp.LightningGodEnabled or Library.Unloaded
+            end)
+            
+            Script.Temp.LightningGodRespawn = lplr.CharacterAdded:Connect(function()
+                if Script.Temp.LightningGodEnabled then
+                    task.wait(1)
+                    executeLightningGodEffect()
+                end
+            end)
+        else
+            Script.Functions.Alert("Lightning God Awakening Disabled", 3)
+            Script.Temp.LightningGodEnabled = false
+            
+            if Script.Temp.LightningGodLoop then
+                task.cancel(Script.Temp.LightningGodLoop)
+                Script.Temp.LightningGodLoop = nil
+            end
+            
+            if Script.Temp.LightningGodRespawn then
+                Script.Temp.LightningGodRespawn:Disconnect()
+                Script.Temp.LightningGodRespawn = nil
+            end
+        end
+    end)
+
+    FunGroupBox:AddToggle("PhantomDash", {
+        Text = "Dash Effect",
+        Default = false
+    }):AddColorPicker("PhantomDashColor", {
+        Default = Color3.fromRGB(255, 255, 255)
+    })
+    
+    Toggles.PhantomDash:OnChanged(function(call)
+        if call then
+            Script.Functions.Alert("Phantom Dash Enabled", 3)
+            Script.Temp.PhantomDashEnabled = true
+            
+            local function executePhantomDash()
+                local character = lplr.Character
+                if not character then return end
+                
+                local EffectsModule = Script.Functions.SafeRequire(ReplicatedStorage.Effects)
+                if not EffectsModule then
+                    Script.Functions.Alert("Effects module not found!", 3)
+                    return
+                end
+                
+                local fakeDashingFolder = Instance.new("Folder")
+                fakeDashingFolder.Name = "PhantomDashFolder"
+                fakeDashingFolder.Parent = character
+
+                Script.Temp.FakeDashingFolder = fakeDashingFolder
+                
+                fakeDashingFolder:SetAttribute("ICEROCKS", true)
+                fakeDashingFolder:SetAttribute("LOOKVEC", "Forward")
+                
+                character:SetAttribute("ColorForEffects", Options.PhantomDashColor.Value)
+                
+                local success, err = pcall(function()
+                    if EffectsModule.RenderDashEffects then
+                        EffectsModule.RenderDashEffects({
+                            Player = lplr,
+                            DashingFolder = fakeDashingFolder
+                        })
+                    else
+                        EffectsModule({
+                            Player = lplr,
+                            DashingFolder = fakeDashingFolder
+                        })
+                    end
+                end)
+                
+                if not success then
+                    Script.Functions.Alert("Failed to execute Phantom Dash: " .. tostring(err), 3)
+                else
+                    Script.Functions.Alert("Phantom Dash executed!", 3)
+                end
+                
+                task.delay(5, function()
+                    if fakeDashingFolder and fakeDashingFolder.Parent then
+                        fakeDashingFolder:Destroy()
+                    end
+                    if Script.Temp.FakeDashingFolder then
+                        pcall(function()
+                            Script.Temp.FakeDashingFolder:Destroy()
+                        end)
+                    end
+                end)
+            end
+            
+            executePhantomDash()
+            
+            Script.Temp.PhantomDashLoop = task.spawn(function()
+                repeat
+                    task.wait(8)
+                    if Script.Temp.PhantomDashEnabled then
+                        if Script.Temp.FakeDashingFolder then
+                            pcall(function()
+                                Script.Temp.FakeDashingFolder:Destroy()
+                            end)
+                        end
+                        executePhantomDash()
+                    end
+                until not Script.Temp.PhantomDashEnabled or Library.Unloaded
+            end)
+            
+            Script.Temp.PhantomDashRespawn = lplr.CharacterAdded:Connect(function()
+                if Script.Temp.PhantomDashEnabled then
+                    task.wait(1)
+                    executePhantomDash()
+                end
+            end)
+        else
+            Script.Functions.Alert("Phantom Dash Disabled", 3)
+            Script.Temp.PhantomDashEnabled = false
+            
+            if Script.Temp.PhantomDashLoop then
+                task.cancel(Script.Temp.PhantomDashLoop)
+                Script.Temp.PhantomDashLoop = nil
+            end
+            
+            if Script.Temp.PhantomDashRespawn then
+                Script.Temp.PhantomDashRespawn:Disconnect()
+                Script.Temp.PhantomDashRespawn = nil
+            end
+
+            if Script.Temp.FakeDashingFolder then
+                pcall(function()
+                    Script.Temp.FakeDashingFolder:Destroy()
+                end)
+            end
         end
     end)
 end
@@ -1414,8 +1800,8 @@ local GreenLightRedLightGroup = Tabs.Main:AddLeftGroupbox("Red Light / Green Lig
     end)
 end
 
-local DangolaGameGroup = Tabs.Main:AddLeftGroupbox("Dalgona Game") do
-    DangolaGameGroup:AddButton("Complete Dalgona Game", function()
+local DalgonaGameGroup = Tabs.Main:AddLeftGroupbox("Dalgona Game") do
+    DalgonaGameGroup:AddButton("Complete Dalgona Game", function()
         if not Script.Functions.GetDalgonaRemote() then
             Script.Functions.Alert("Game hasn't started yet")
             return
@@ -1432,7 +1818,7 @@ local DangolaGameGroup = Tabs.Main:AddLeftGroupbox("Dalgona Game") do
             until not Script.Functions.GetDalgonaRemote()
         end)
     end)
-    DangolaGameGroup:AddToggle("ImmuneDalgonaGame", {
+    DalgonaGameGroup:AddToggle("ImmuneDalgonaGame", {
         Text = "Immune Dalgona Game",
         Default = false
     })
@@ -1467,6 +1853,14 @@ Toggles.ImmuneDalgonaGame:OnChanged(function(call)
         hookmetamethod(game, '__namecall', Script.Temp.DalgonaRemoteHook)
     end
 end)
+
+--[[task.spawn(function()
+    Library:GiveSignal(lplr:WaitForChild("PlayerGui"):WaitForChild("ImpactFrames").ChildAdded:Connect(function()
+        if Toggles.PatchFlingAnticheat.Value then
+            lplr:WaitForChild("PlayerGui"):WaitForChild("ImpactFrames"):ClearAllChildren()
+        end
+    end))
+end)--]]
 
 local TugOfWarGroup = Tabs.Main:AddLeftGroupbox("Tug Of War") do
     TugOfWarGroup:AddToggle("AutoPull", {
@@ -1532,6 +1926,14 @@ local GlassBridgeGroup = Tabs.Main:AddLeftGroupbox("Glass Bridge") do
     end)
 end
 
+local InformationGroup = Tabs.Main:AddRightGroupbox("Information") do
+    InformationGroup:AddLabel("Welcome to Voidware!")
+    InformationGroup:AddLabel("Make sure to join our discord \n server for updates!")
+    InformationGroup:AddLabel("")
+    InformationGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
+    InformationGroup:AddButton("Unload", function() Library:Unload() end)
+end
+
 function Script.Functions.GetHider()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr == lplr then continue end
@@ -1545,23 +1947,41 @@ function Script.Functions.GetHider()
     end
 end
 
-local HideAndSeekGroup = Tabs.Main:AddLeftGroupbox("Hide And Seeek") do
-    HideAndSeekGroup:AddButton("Teleport To Hider", function()
-        if not lplr.Character then return end
-        if Script.GameState ~= "HideAndSeek" then 
-            Script.Functions.Alert("Game not running!")
-            return
+local HideAndSeekGroup = Tabs.Main:AddRightGroupbox("Hide And Seeek") do
+    HideAndSeekGroup:AddToggle("TeleportToHider", {
+        Text = "Teleport To Hider",
+        Default = false
+    }):AddKeyPicker("TTH", {
+        Mode = "Toggle",
+        Default = "P",
+        Text = "Teleport To Hider",
+        SyncToggleState = true
+    })
+    Toggles.TeleportToHider:OnChanged(function(call)
+        if call then
+            task.spawn(function()
+                task.delay(0.5, function()
+                    if Toggles.TeleportToHider.Value then
+                        Toggles.TeleportToHider:SetValue(false)
+                    end
+                end)
+            end)
+            if not lplr.Character then return end
+            if Script.GameState ~= "HideAndSeek" then 
+                Script.Functions.Alert("Game not running!")
+                return
+            end
+            local hider = Script.Functions.GetHider()
+            if not hider then
+                Script.Functions.Alert("No hider found :(")
+                return 
+            end
+            lplr.Character:PivotTo(hider:GetPrimaryPartCFrame())
         end
-        local hider = Script.Functions.GetHider()
-        if not hider then
-            Script.Functions.Alert("No hider found :(")
-            return 
-        end
-        lplr.Character:PivotTo(hider:GetPrimaryPartCFrame())
     end)
 end
 
-local RebelGroup = Tabs.Main:AddLeftGroupbox("Rebel") do
+local RebelGroup = Tabs.Main:AddRightGroupbox("Rebel") do
     RebelGroup:AddToggle("ExpandGuardHitbox", {
         Text = "Expand Guard Hitbox",
         Default = false
@@ -1583,7 +2003,7 @@ local RebelGroup = Tabs.Main:AddLeftGroupbox("Rebel") do
         local head = model:FindFirstChild("Head")
         if not head or not head:IsA("BasePart") then return end
 
-        if not model:FindFirstChild("_HeadHighlighter") then
+        --[[if not model:FindFirstChild("_HeadHighlighter") then
             local highlight = Instance.new("Highlight")
             highlight.Name = "_HeadHighlighter"
             highlight.Adornee = model
@@ -1591,7 +2011,7 @@ local RebelGroup = Tabs.Main:AddLeftGroupbox("Rebel") do
             highlight.OutlineColor = Color3.new(1, 1, 1)
             highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
             highlight.Parent = model
-        end
+        end--]]
 
         processedModels[model] = head
     end
@@ -1638,14 +2058,129 @@ local RebelGroup = Tabs.Main:AddLeftGroupbox("Rebel") do
             cleanup()
         end
     end)
-end
 
-local InformationGroup = Tabs.Main:AddRightGroupbox("Information") do
-    InformationGroup:AddLabel("Welcome to Voidware!")
-    InformationGroup:AddLabel("Make sure to join our discord \n server for updates!")
-    InformationGroup:AddLabel("")
-    InformationGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
-    InformationGroup:AddButton("Unload", function() Library:Unload() end)
+    RebelGroup:AddToggle("AimBot", { Text = "AimBot", Default = false })
+    RebelGroup:AddToggle("GunMods", { Text = "Gun Mods", Default = false })
+
+    RebelGroup:AddSlider("AimSpeed", {
+        Text = "Aim Speed",
+        Default = 0.2,
+        Min = 0.01,
+        Max = 1,
+        Rounding = 2
+    })
+
+    local originalGunStats = {}
+    local originalDamageValues = {}
+    local function patchGunStats(enable)
+        local Guns = ReplicatedStorage:FindFirstChild("Weapons") and ReplicatedStorage.Weapons:FindFirstChild("Guns")
+        if not Guns then return end
+        local GunDamageValues = Script.Functions.SafeRequire(ReplicatedStorage.Modules.GunDamageValues)
+        for _, gun in pairs(Guns:GetChildren()) do
+            if enable then
+                if not originalGunStats[gun.Name] then
+                    originalGunStats[gun.Name] = {}
+                    for _, stat in ipairs({"Spread", "FireRateCD", "MaxBullets", "ReloadingSpeed"}) do
+                        if gun:FindFirstChild(stat) then
+                            originalGunStats[gun.Name][stat] = gun[stat].Value
+                        end
+                    end
+                end
+                if gun:FindFirstChild("Spread") then gun.Spread.Value = 0 end
+                if gun:FindFirstChild("FireRateCD") then gun.FireRateCD.Value = 0.01 end
+                if gun:FindFirstChild("MaxBullets") then gun.MaxBullets.Value = 999 end
+                if gun:FindFirstChild("ReloadingSpeed") then gun.ReloadingSpeed.Value = 0.01 end
+
+                if GunDamageValues and GunDamageValues[gun.Name] then
+                    if not originalDamageValues[gun.Name] then
+                        originalDamageValues[gun.Name] = {}
+                        for part, dmg in pairs(GunDamageValues[gun.Name]) do
+                            originalDamageValues[gun.Name][part] = dmg
+                        end
+                    end
+                    for part, _ in pairs(GunDamageValues[gun.Name]) do
+                        GunDamageValues[gun.Name][part] = 9999
+                    end
+                end
+            else
+                if originalGunStats[gun.Name] then
+                    for stat, val in pairs(originalGunStats[gun.Name]) do
+                        if gun:FindFirstChild(stat) then
+                            gun[stat].Value = val
+                        end
+                    end
+                end
+                if GunDamageValues and GunDamageValues[gun.Name] and originalDamageValues[gun.Name] then
+                    for part, val in pairs(originalDamageValues[gun.Name]) do
+                        GunDamageValues[gun.Name][part] = val
+                    end
+                end
+            end
+        end
+    end
+
+    Toggles.GunMods:OnChanged(function(enabled)
+        patchGunStats(enabled)
+    end)
+
+    local function isGuard(model)
+        if not model:IsA("Model") or model == lplr.Character then return false end
+        local lower = model.Name:lower()
+        return lower:find("rebelguard") --[[or lower:find("guy") or lower:find("squid") --]]
+    end
+
+    local function getClosestGuardPart()
+        local camPos = camera.CFrame.Position
+        local closest, closestDist = nil, math.huge
+        for _, model in ipairs(workspace:GetDescendants()) do
+            if isGuard(model) then
+                local part = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChildWhichIsA("BasePart")
+                if part then
+                    local dist = (part.Position - camPos).Magnitude
+                    if dist < closestDist then
+                        closest = part
+                        closestDist = dist
+                    end
+                end
+            end
+        end
+        return closest
+    end
+
+    Toggles.AimBot:OnChanged(function(val)
+        if val then
+            Script.Functions.Alert("AimBot Enabled", 3)
+            Script.Temp.AimBotConnection = RunService.RenderStepped:Connect(function()
+                if not Toggles.AimBot.Value or not lplr.Character then return end
+                local cam = workspace.CurrentCamera
+                local camPos = cam.CFrame.Position
+                local closest, closestDist = nil, math.huge
+                for _, model in ipairs(workspace:GetDescendants()) do
+                    if isGuard(model) then
+                        local part = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                            local dist = (part.Position - camPos).Magnitude
+                            if dist < closestDist then
+                                closest = part
+                                closestDist = dist
+                            end
+                        end
+                    end
+                end
+                if closest then
+                    local look = (closest.Position - camPos).Unit
+                    local aimSpeed = Options.AimSpeed and Options.AimSpeed.Value or 0.2
+                    cam.CFrame = cam.CFrame:Lerp(CFrame.new(camPos, camPos + look), aimSpeed)
+                end
+            end)
+        else
+            Script.Functions.Alert("AimBot Disabled", 3)
+            if Script.Temp.AimBotConnection then
+                Script.Temp.AimBotConnection:Disconnect()
+                Script.Temp.AimBotConnection = nil
+            end
+        end
+    end)
 end
 
 function Script.Functions.CleanTable(tab)
@@ -1740,14 +2275,14 @@ function Script.Functions.PlayEmote(emoteId, emoteObject)
     end
 end
 
-local MiscGroup = Tabs.Main:AddRightGroupbox("Misc") do
-    MiscGroup:AddDropdown("EmotesList", { 
+local EmotesGroup = Tabs.Misc:AddRightGroupbox("Misc") do
+    EmotesGroup:AddDropdown("EmotesList", { 
         Text = 'Emotes List', 
         Values = {}, 
         AllowNull = true 
     })
     task.spawn(Script.Functions.HookEmotesFolder)
-    MiscGroup:AddButton("Play Emote", function()
+    EmotesGroup:AddButton("Play Emote", function()
         if Options.EmotesList.Value then
             local emoteId = Script.Functions.ValidateEmote(Options.EmotesList.Value)
             if emoteId and emoteId.anim and emoteId.object then
@@ -1761,15 +2296,15 @@ local MiscGroup = Tabs.Main:AddRightGroupbox("Misc") do
             Script.Functions.Alert("No Emote Selected!", 3)
         end
     end)
-    MiscGroup:AddButton("Stop Emoting", function()
+    EmotesGroup:AddButton("Stop Emoting", function()
         if Script.Temp.EmoteTrack and typeof(Script.Temp.EmoteTrack) == "Instance" and Script.Temp.EmoteTrack:IsA("AnimationTrack") then
             pcall(function() Script.Temp.EmoteTrack:Stop() end)
             Script.Temp.EmoteTrack = nil
         end
     end)
-    
-    MiscGroup:AddDivider()
+end
 
+local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc") do
     MiscGroup:AddToggle("AntiRagdoll", {
         Text = "Anti Ragdoll + No Stun",
         Default = false
@@ -1788,14 +2323,120 @@ local MiscGroup = Tabs.Main:AddRightGroupbox("Misc") do
     MiscGroup:AddDivider()
     MiscGroup:AddButton("Fix Camera", Script.Functions.FixCamera)
     MiscGroup:AddButton("Skip Cutscene", Script.Functions.FixCamera)
-    --MiscGroup:AddDivider()
-    MiscGroup:AddButton("Teleport To Safe Place", function()
+    MiscGroup:AddDivider()
+    MiscGroup:AddToggle("TeleportToSafePlace", {
+        Text = "Teleport To Safe Place",
+        Default = false
+    }):AddKeyPicker("TTSPKey", {
+        Mode = "Toggle",
+        Default = "R",
+        Text = "Teleport To Safe Place",
+        SyncToggleState = true
+    })
+    Toggles.TeleportToSafePlace:OnChanged(function(call)
+        if call then
+            Script.Functions.TeleportSafe()
+            task.wait(0.5)
+            Toggles.TeleportToSafePlace:SetValue(false)
+        end
+    end)
+    MiscGroup:AddToggle("AntiVoid", {
+        Text = "Anti Void",
+        Default = false
+    })
+
+    Toggles.AntiVoid:OnChanged(function(enabled)
+        if enabled then
+            Script.Functions.Alert("Anti Void Enabled", 3)
+            Script.Temp.AntiVoidEnabled = true
+            Script.Temp.AntiVoidPart = nil
+            Script.Temp.AntiVoidConnection = nil
+            
+            local function createAntiVoidPart()
+                if Script.Temp.AntiVoidPart then
+                    Script.Temp.AntiVoidPart:Destroy()
+                end
+                
+                Script.Temp.AntiVoidPart = Instance.new("Part")
+                Script.Temp.AntiVoidPart.Size = Vector3.new(10000, 1, 10000)
+                Script.Temp.AntiVoidPart.Transparency = 0.5
+                Script.Temp.AntiVoidPart.Material = Enum.Material.ForceField
+                Script.Temp.AntiVoidPart.Color = Color3.fromRGB(0, 255, 255)
+                Script.Temp.AntiVoidPart.CanCollide = true
+                Script.Temp.AntiVoidPart.Anchored = true
+                Script.Temp.AntiVoidPart.CanQuery = false
+                Script.Temp.AntiVoidPart.Parent = workspace
+                
+                local debounce = tick()
+                Script.Temp.AntiVoidConnection = Script.Temp.AntiVoidPart.Touched:Connect(function(touchedPart)
+                    if touchedPart.Parent == lplr.Character and lplr.Character:FindFirstChild("Humanoid") and lplr.Character.Humanoid.Health > 0 and debounce < tick() then
+                        local rootPart = lplr.Character:FindFirstChild("HumanoidRootPart")
+                        if rootPart then
+                            debounce = tick() + 0.1
+                            rootPart.Velocity = Vector3.new(rootPart.Velocity.X, 100, rootPart.Velocity.Z)
+                        end
+                    end
+                end)
+            end
+            
+            createAntiVoidPart()
+            
+            Script.Temp.AntiVoidLoop = task.spawn(function()
+                repeat
+                    if lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart") and Script.Temp.AntiVoidPart then
+                        local rootPart = lplr.Character.HumanoidRootPart
+                        local rayCheck = RaycastParams.new()
+                        rayCheck.RespectCanCollide = true
+                        rayCheck.FilterDescendantsInstances = {camera, lplr.Character, Script.Temp.AntiVoidPart}
+                        rayCheck.CollisionGroup = rootPart.CollisionGroup
+                        
+                        local ray = workspace:Raycast(rootPart.Position, Vector3.new(0, -1000, 0), rayCheck)
+                        if ray then
+                            Script.Temp.AntiVoidPart.Position = ray.Position - Vector3.new(0, 15, 0)
+                        end
+                    end
+                    task.wait(0.1)
+                until not Script.Temp.AntiVoidEnabled or Library.Unloaded
+            end)
+            
+            Script.Temp.AntiVoidRespawn = lplr.CharacterAdded:Connect(function()
+                if Script.Temp.AntiVoidEnabled then
+                    task.wait(0.6)
+                    createAntiVoidPart()
+                end
+            end)
+        else
+            Script.Functions.Alert("Anti Void Disabled", 3)
+            Script.Temp.AntiVoidEnabled = false
+            
+            if Script.Temp.AntiVoidLoop then
+                task.cancel(Script.Temp.AntiVoidLoop)
+                Script.Temp.AntiVoidLoop = nil
+            end
+            
+            if Script.Temp.AntiVoidConnection then
+                Script.Temp.AntiVoidConnection:Disconnect()
+                Script.Temp.AntiVoidConnection = nil
+            end
+            
+            if Script.Temp.AntiVoidRespawn then
+                Script.Temp.AntiVoidRespawn:Disconnect()
+                Script.Temp.AntiVoidRespawn = nil
+            end
+            
+            if Script.Temp.AntiVoidPart then
+                Script.Temp.AntiVoidPart:Destroy()
+                Script.Temp.AntiVoidPart = nil
+            end
+        end
+    end)
+    --[[MiscGroup:AddButton("Teleport To Safe Place", function()
         if not lplr.Character then
             Script.Functions.Alert("No character found")
             return
         end
         Script.Functions.TeleportSafe()
-    end)
+    end)--]]
 
     MiscGroup:AddButton("Fix Players Visibility", Script.Functions.CheckPlayersVisibility)
 end
@@ -1835,7 +2476,7 @@ Toggles.FOVToggle:OnChanged(function(call)
     end
 end)
 
-local PlayerGroupBox = Tabs.Main:AddLeftGroupbox("Player") do
+local PlayerGroupBox = Tabs.Main:AddRightGroupbox("Player") do
     PlayerGroupBox:AddSlider("SpeedSlider", {
         Text = "Walk Speed",
         Default = 30,
@@ -1890,7 +2531,7 @@ local PlayerGroupBox = Tabs.Main:AddLeftGroupbox("Player") do
 end
 
 function Script.Functions.HookShittyAntiFlingDetection()
-    if not lplr.Character then return end
+    --[[if not lplr.Character then return end
     if not Toggles.FlingAuraToggle.Value then return end
     if Script.Temp.MainScriptHook then
         pcall(function()
@@ -1908,14 +2549,14 @@ function Script.Functions.HookShittyAntiFlingDetection()
     Script.Temp.MainScriptHook = Main:GetPropertyChangedSignal("Enabled"):Connect(function()
         Main.Enabled = false
         Main.Disabled = true
-    end)
+    end)--]]
 end
 
 Library:GiveSignal(lplr.CharacterAdded:Connect(Script.Functions.HookShittyAntiFlingDetection))
 pcall(Script.Functions.HookShittyAntiFlingDetection)
 
 function Script.Functions.RevertAntiFlingDetection()
-    if Script.Temp.MainScriptHook then
+    --[[if Script.Temp.MainScriptHook then
         pcall(function()
             Script.Temp.MainScriptHook:Disconnect()
         end)
@@ -1923,7 +2564,7 @@ function Script.Functions.RevertAntiFlingDetection()
     if not lplr.Character then return end
     local Main = lplr.Character:WaitForChild("Main")
     Main.Enabled = true
-    Main.Disabled = false
+    Main.Disabled = false--]]
 end
 
 Toggles.FlingAuraToggle:OnChanged(function(enabled)
@@ -1946,6 +2587,11 @@ Toggles.FlingAuraToggle:OnChanged(function(enabled)
         Script.Functions.Alert("Fling Aura Enabled", 3)
         Script.Temp.FlingAuraActive = true
         Script.Functions.HookShittyAntiFlingDetection()
+        pcall(function()
+            if not Toggles.PatchFlingAnticheat.Value then
+                Toggles.PatchFlingAnticheat:SetValue(true)
+            end
+        end)
         setNoclip(true)
         local player = lplr
         local function getRoot(character)
@@ -1987,6 +2633,7 @@ Toggles.Fly:SetVisible(false)
 Options.FlySpeed:SetVisible(false)
 
 Toggles.Noclip:OnChanged(function(call)
+    Script.Temp.NoclipParts = Script.Temp.NoclipParts or {}
     if call then
         Script.Functions.Alert("Noclip Enabled", 3)
         local function NoclipLoop()
@@ -1994,6 +2641,7 @@ Toggles.Noclip:OnChanged(function(call)
                 for _, child in pairs(lplr.Character:GetDescendants()) do
                     if child:IsA("BasePart") and child.CanCollide == true then
                         child.CanCollide = false
+                        Script.Temp.NoclipParts[child] = true
                     end
                 end
             end
@@ -2006,12 +2654,13 @@ Toggles.Noclip:OnChanged(function(call)
         end)
     else
         Script.Functions.Alert("Noclip Disabled", 3)
-        if lplr.Character ~= nil then
-            for _, child in pairs(lplr.Character:GetDescendants()) do
-                if child:IsA("BasePart") and child.CanCollide == false then
-                    child.CanCollide = true
+        if lplr.Character ~= nil and Script.Temp.NoclipParts then
+            for part, _ in pairs(Script.Temp.NoclipParts) do
+                if part and part:IsA("BasePart") then
+                    part.CanCollide = true
                 end
             end
+            Script.Temp.NoclipParts = {}
         end
     end
 end)
@@ -2026,24 +2675,29 @@ end)
 Toggles.SpeedToggle:OnChanged(function(call)
     if call then
         Script.Functions.Alert("Speed Enabled", 3)
-        Script.Temp.OldSpeed = lplr.Character.Humanoid.WalkSpeed
+        if lplr.Character and lplr.Character:FindFirstChild("Humanoid") then
+            Script.Temp.OldSpeed = lplr.Character.Humanoid.WalkSpeed
+            lplr.Character.Humanoid.WalkSpeed = Options.SpeedSlider.Value
+        end
         task.spawn(function()
             repeat
                 task.wait(0.5)
+                if not Toggles.SpeedToggle.Value then return end
                 if not lplr.Character then return end
                 if not lplr.Character:FindFirstChild("Humanoid") then return end
                 if call then
                     lplr.Character.Humanoid.WalkSpeed = Options.SpeedSlider.Value
-                else
-                    lplr.Character.Humanoid.WalkSpeed = Script.Temp.OldSpeed or 23
                 end
             until not Toggles.SpeedToggle.Value or Library.Unloaded
         end)
     else
         Script.Functions.Alert("Speed Disabled", 3)
-        lplr.Character.Humanoid.WalkSpeed = Script.Temp.OldSpeed or 23
+        if lplr.Character and lplr.Character:FindFirstChild("Humanoid") then
+            lplr.Character.Humanoid.WalkSpeed = 31
+            Script.Temp.OldSpeed = nil
+        end
     end
-end)  
+end)    
 
 local controlModule
 
@@ -2078,7 +2732,208 @@ Toggles.Fly:OnChanged(function(value)
     end
 end)
 
+function Script.Functions.SpoofFlingVelocity(call)
+    if call then
+        local spoofedValue = Vector3.new(0, 0, 0)
+        local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+        if not root then
+            Script.Functions.Alert("No HumanoidRootPart found!", 3)
+            return
+        end
+
+        if not Script.Temp.OriginalIndex then
+            Script.Temp.OriginalIndex = hookmetamethod(game, "__index", function() end)
+            hookmetamethod(game, "__index", Script.Temp.OriginalIndex)
+        end
+        if not Script.Temp.OriginalNewIndex then
+            Script.Temp.OriginalNewIndex = hookmetamethod(game, "__newindex", function() end)
+            hookmetamethod(game, "__newindex", Script.Temp.OriginalNewIndex)
+        end
+
+        local lastVelocity, lastAssemblyLinearVelocity
+        local spoofedProps = {
+            Velocity = spoofedValue,
+            AssemblyLinearVelocity = spoofedValue
+        }
+
+        local index, newindex
+
+        index = hookmetamethod(game, "__index", function(self, key)
+            if not checkcaller() and typeof(self) == "Instance" and self == root then
+                if spoofedProps[key] ~= nil then
+                    return spoofedProps[key]
+                end
+            end
+            return Script.Temp.OriginalIndex(self, key)
+        end)
+
+        newindex = hookmetamethod(game, "__newindex", function(self, key, value)
+            if not checkcaller() and typeof(self) == "Instance" and self == root then
+                if spoofedProps[key] ~= nil then
+                    if key == "Velocity" then
+                        lastVelocity = value
+                        return
+                    elseif key == "AssemblyLinearVelocity" then
+                        lastAssemblyLinearVelocity = value
+                        return
+                    end
+                end
+            end
+            return Script.Temp.OriginalNewIndex(self, key, value)
+        end)
+
+        Script.Temp.SpoofedIndex = index
+        Script.Temp.SpoofedNewIndex = newindex
+        Script.Temp.LastVelocity = lastVelocity
+        Script.Temp.LastAssemblyLinearVelocity = lastAssemblyLinearVelocity
+
+        Script.Functions.Alert("Fling Velocity Spoofing Enabled!", 3)
+    else
+        if Script.Temp.SpoofedIndex then
+            hookmetamethod(game, "__index", Script.Temp.OriginalIndex)
+            Script.Temp.SpoofedIndex = nil
+        end
+        if Script.Temp.SpoofedNewIndex then
+            hookmetamethod(game, "__newindex", Script.Temp.OriginalNewIndex)
+            Script.Temp.SpoofedNewIndex = nil
+        end
+        
+        local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            if Script.Temp.LastVelocity then 
+                root.Velocity = Script.Temp.LastVelocity 
+                Script.Temp.LastVelocity = nil
+            end
+            if Script.Temp.LastAssemblyLinearVelocity then 
+                root.AssemblyLinearVelocity = Script.Temp.LastAssemblyLinearVelocity 
+                Script.Temp.LastAssemblyLinearVelocity = nil
+            end
+        end
+        
+        Script.Functions.Alert("Fling Velocity Spoofing Disabled!", 3)
+    end
+end
+
+function Script.Functions.FlingCharacterHook(call)
+    if call then
+        local function PatchFlingAnticheat()
+            local char = lplr.Character
+            if not char then return end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+
+            if getconnections then
+                --[[if not Script.Temp.OriginalVelocityConnections then
+                    Script.Temp.OriginalVelocityConnections = {}
+                    for _, conn in pairs(getconnections(root:GetPropertyChangedSignal("Velocity"))) do
+                        table.insert(Script.Temp.OriginalVelocityConnections, conn)
+                        conn:Disable()
+                    end
+                end
+                if not Script.Temp.OriginalDescendantConnections then
+                    Script.Temp.OriginalDescendantConnections = {}
+                    for _, conn in pairs(getconnections(char.DescendantAdded)) do
+                        table.insert(Script.Temp.OriginalDescendantConnections, conn)
+                        conn:Disable()
+                    end
+                end--]]
+            end
+
+            local anticheatStates = { "Stun", "Anchor", "RotateDisabled", "CantRun", "InCutscene", "DisableHeadLookAt" }
+            if not Script.Temp.FlingAnticheatChildConn then
+                Script.Temp.FlingAnticheatChildConn = char.ChildAdded:Connect(function(child)
+                    if table.find(anticheatStates, child.Name) then
+                        child:Destroy()
+                    end
+                end)
+            end
+
+            if not Script.Temp.FlingAnticheatMT then
+                local mt = getrawmetatable(root)
+                Script.Temp.FlingAnticheatOldNewIndex = mt.__newindex
+                setreadonly(mt, false)
+                mt.__newindex = function(self, key, value)
+                    if self == root and key == "Anchored" and value == true then
+                        return
+                    end
+                    return Script.Temp.FlingAnticheatOldNewIndex(self, key, value)
+                end
+                setreadonly(mt, true)
+                Script.Temp.FlingAnticheatMT = mt
+            end
+        end
+
+        local function onChar(char)
+            task.wait(1)
+            PatchFlingAnticheat()
+        end
+        Script.Temp.FlingAnticheatCharConn = lplr.CharacterAdded:Connect(onChar)
+        if lplr.Character then
+            PatchFlingAnticheat()
+        end
+        Script.Functions.Alert("Anticheat Patched!", 3)
+    else
+        if Script.Temp.FlingAnticheatCharConn then
+            Script.Temp.FlingAnticheatCharConn:Disconnect()
+            Script.Temp.FlingAnticheatCharConn = nil
+        end
+        if Script.Temp.FlingAnticheatChildConn then
+            Script.Temp.FlingAnticheatChildConn:Disconnect()
+            Script.Temp.FlingAnticheatChildConn = nil
+        end
+        if Script.Temp.FlingAnticheatMT and Script.Temp.FlingAnticheatOldNewIndex then
+            local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                local mt = Script.Temp.FlingAnticheatMT
+                setreadonly(mt, false)
+                mt.__newindex = Script.Temp.FlingAnticheatOldNewIndex
+                setreadonly(mt, true)
+            end
+            Script.Temp.FlingAnticheatMT = nil
+            Script.Temp.FlingAnticheatOldNewIndex = nil
+        end
+        Script.Functions.Alert("Anticheat Patch Disabled!", 3)
+    end
+end
+
 local SecurityGroupBox = Tabs.Main:AddRightGroupbox("Security") do
+    SecurityGroupBox:AddToggle("PatchFlingAnticheat", {
+        Text = "Patch Anticheat",
+        Default = false
+    }):OnChanged(function(call)
+        Script.Functions.SpoofFlingVelocity(call)
+        Script.Functions.FlingCharacterHook(call)
+    end)
+    --[[SecurityGroupBox:AddToggle("PatchAnticheat", {
+        Text = "Patch Anticheat",
+        Default = false
+    }):OnChanged(function(call)
+        if call then
+            if not hookmetamethod then
+                Script.Functions.Alert("Your executor doesn't support this :(")
+                Toggles.PatchAnticheat:SetValue(false)
+                return
+            end
+            local AnticheatHook
+            AnticheatHook = hookmetamethod(game, "__namecall", function(self, ...)
+                local args = {...}
+                local method = getnamecallmethod()
+
+                if tostring(self) == "TemporaryReachedBindable" and method == "FireServer" then
+                    if args[1] ~= nil and type(args[1]) == "table" and (args[1].FallingPlayer ~= nil or args[1].funnydeath ~= nil) then
+                        return nil
+                    end
+                end
+                
+                return AnticheatHook(self, unpack(args))
+            end)
+            Script.Temp.AnticheatHook = AnticheatHook
+        else
+            if not hookmetamethod then return end
+            if not Script.Temp.AnticheatHook then return end
+            hookmetamethod(game, '__namecall', Script.Temp.AnticheatHook)
+        end
+    end)--]]
     SecurityGroupBox:AddToggle("AntiAfk", {
         Text = "Anti AFK",
         Default = true
@@ -2156,11 +3011,137 @@ local SecurityGroupBox = Tabs.Main:AddRightGroupbox("Security") do
     end)
 end
 
-local PerformanceGroupBox = Tabs.Main:AddRightGroupbox("Performance") do
+local PerformanceGroupBox = Tabs.Misc:AddRightGroupbox("Performance") do
     PerformanceGroupBox:AddToggle("LowGFX", {
         Text = "Low GFX",
         Default = false
-    })
+    }):OnChanged(function(call)
+        if call then 
+            Script.Temp.LowGFX_Originals = Script.Temp.LowGFX_Originals or {}
+            local Terrain = workspace:FindFirstChildOfClass('Terrain')
+            if Terrain then
+                Script.Temp.LowGFX_Originals.Terrain = {
+                    WaterWaveSize = Terrain.WaterWaveSize,
+                    WaterWaveSpeed = Terrain.WaterWaveSpeed,
+                    WaterReflectance = Terrain.WaterReflectance,
+                    WaterTransparency = Terrain.WaterTransparency
+                }
+                Terrain.WaterWaveSize = 0
+                Terrain.WaterWaveSpeed = 0
+                Terrain.WaterReflectance = 0
+                Terrain.WaterTransparency = 1
+            end
+            Script.Temp.LowGFX_Originals.Lighting = {
+                GlobalShadows = Lighting.GlobalShadows,
+                FogEnd = Lighting.FogEnd,
+                FogStart = Lighting.FogStart
+            }
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            Lighting.FogStart = 9e9
+            pcall(function()
+                Script.Temp.LowGFX_Originals.QualityLevel = settings().Rendering.QualityLevel
+                settings().Rendering.QualityLevel = 1
+            end)
+            Script.Temp.LowGFX_Originals.BaseParts = {}
+            for i,v in pairs(game:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    Script.Temp.LowGFX_Originals.BaseParts[v] = {
+                        Material = v.Material,
+                        Reflectance = v.Reflectance,
+                        BackSurface = v.BackSurface,
+                        BottomSurface = v.BottomSurface,
+                        FrontSurface = v.FrontSurface,
+                        LeftSurface = v.LeftSurface,
+                        RightSurface = v.RightSurface,
+                        TopSurface = v.TopSurface
+                    }
+                    v.Material = "Plastic"
+                    v.Reflectance = 0
+                    v.BackSurface = "SmoothNoOutlines"
+                    v.BottomSurface = "SmoothNoOutlines"
+                    v.FrontSurface = "SmoothNoOutlines"
+                    v.LeftSurface = "SmoothNoOutlines"
+                    v.RightSurface = "SmoothNoOutlines"
+                    v.TopSurface = "SmoothNoOutlines"
+                elseif v:IsA("Decal") then
+                    Script.Temp.LowGFX_Originals[v] = v.Transparency
+                    v.Transparency = 1
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                    Script.Temp.LowGFX_Originals[v] = v.Lifetime
+                    v.Lifetime = NumberRange.new(0)
+                end
+            end
+            Script.Temp.LowGFX_Originals.PostEffects = {}
+            for i,v in pairs(Lighting:GetDescendants()) do
+                if v:IsA("PostEffect") then
+                    Script.Temp.LowGFX_Originals.PostEffects[v] = v.Enabled
+                    v.Enabled = false
+                end
+            end
+            Script.Temp.LowGFX_DescendantConn = workspace.DescendantAdded:Connect(function(child)
+                task.spawn(function()
+                    if child:IsA('ForceField') or child:IsA('Sparkles') or child:IsA('Smoke') or child:IsA('Fire') or child:IsA('Beam') then
+                        RunService.Heartbeat:Wait()
+                        child:Destroy()
+                    end
+                end)
+            end)
+        else
+            local Terrain = workspace:FindFirstChildOfClass('Terrain')
+            if Terrain and Script.Temp.LowGFX_Originals and Script.Temp.LowGFX_Originals.Terrain then
+                Terrain.WaterWaveSize = Script.Temp.LowGFX_Originals.Terrain.WaterWaveSize
+                Terrain.WaterWaveSpeed = Script.Temp.LowGFX_Originals.Terrain.WaterWaveSpeed
+                Terrain.WaterReflectance = Script.Temp.LowGFX_Originals.Terrain.WaterReflectance
+                Terrain.WaterTransparency = Script.Temp.LowGFX_Originals.Terrain.WaterTransparency
+            end
+            if Script.Temp.LowGFX_Originals and Script.Temp.LowGFX_Originals.Lighting then
+                Lighting.GlobalShadows = Script.Temp.LowGFX_Originals.Lighting.GlobalShadows
+                Lighting.FogEnd = Script.Temp.LowGFX_Originals.Lighting.FogEnd
+                Lighting.FogStart = Script.Temp.LowGFX_Originals.Lighting.FogStart
+            end
+            pcall(function()
+                if Script.Temp.LowGFX_Originals and Script.Temp.LowGFX_Originals.QualityLevel then
+                    settings().Rendering.QualityLevel = Script.Temp.LowGFX_Originals.QualityLevel
+                end
+            end)
+            if Script.Temp.LowGFX_Originals and Script.Temp.LowGFX_Originals.BaseParts then
+                for v, props in pairs(Script.Temp.LowGFX_Originals.BaseParts) do
+                    if v and v.Parent then
+                        v.Material = props.Material
+                        v.Reflectance = props.Reflectance
+                        v.BackSurface = props.BackSurface
+                        v.BottomSurface = props.BottomSurface
+                        v.FrontSurface = props.FrontSurface
+                        v.LeftSurface = props.LeftSurface
+                        v.RightSurface = props.RightSurface
+                        v.TopSurface = props.TopSurface
+                    end
+                end
+            end
+            if Script.Temp.LowGFX_Originals then
+                for v, val in pairs(Script.Temp.LowGFX_Originals) do
+                    if typeof(v) == "Instance" and v:IsA("Decal") then
+                        v.Transparency = val
+                    elseif typeof(v) == "Instance" and (v:IsA("ParticleEmitter") or v:IsA("Trail")) then
+                        v.Lifetime = val
+                    end
+                end
+            end
+            if Script.Temp.LowGFX_Originals and Script.Temp.LowGFX_Originals.PostEffects then
+                for v, enabled in pairs(Script.Temp.LowGFX_Originals.PostEffects) do
+                    if v and v.Parent then
+                        v.Enabled = enabled
+                    end
+                end
+            end
+            if Script.Temp.LowGFX_DescendantConn then
+                Script.Temp.LowGFX_DescendantConn:Disconnect()
+                Script.Temp.LowGFX_DescendantConn = nil
+            end
+            Script.Temp.LowGFX_Originals = nil
+        end
+    end)
     PerformanceGroupBox:AddToggle("DisableEffects", {
         Text = "Disable Effects",
         Default = false
@@ -2197,6 +3178,10 @@ Library:GiveSignal(lplr.CharacterAdded:Connect(function(char)
 end))
 
 local lastCleanupFunction = function() end
+
+pcall(function()
+    Script.GameState = workspace.Values.CurrentGame.Value
+end)
 
 function Script.Functions.HandleAutowin()
     if lastCleanupFunction then
@@ -2276,7 +3261,16 @@ States = {
     end,
     GlassBridge = function()
         Script.Functions.RevealGlassBridge()
-        Script.Functions.WinGlassBridge()
+        local call = true
+        task.spawn(function()
+            repeat
+                Script.Functions.WinGlassBridge()
+                task.wait(3)
+            until not call or not Toggles.InkGameAutowin.Value or Library.Unloaded
+        end)
+        return function()
+            call = false
+        end
     end,
     HideAndSeek = function()
         if lplr:GetAttribute("IsHider") then
@@ -2294,6 +3288,11 @@ States = {
             Script.Functions.CompleteDalgonaGame()
             Script.Functions.BypassDalgonaGame()
             Script.Functions.FixCamera()
+            task.delay(3, function()
+                Script.Functions.CompleteDalgonaGame()
+                Script.Functions.BypassDalgonaGame()
+                Script.Functions.FixCamera()
+            end)
         end)
 
         return function()
@@ -2365,8 +3364,12 @@ Library:OnUnload(function()
             conn:Disconnect()
         end)
     end
+    for _, espType in pairs(Script.ESPTable) do
+        for _, esp in pairs(espType) do
+            pcall(esp.Destroy)
+        end
+    end
     pcall(Script.Functions.RevertAntiFlingDetection)
-    SaveManager:Save()
     Library.Unloaded = true
     getgenv().voidware_loaded = false
     shared.Voidware_InkGame_Library = nil
@@ -2416,3 +3419,36 @@ SaveManager:BuildConfigSection(Tabs["UI Settings"])
 ThemeManager:ApplyToTab(Tabs["UI Settings"])
 
 SaveManager:LoadAutoloadConfig()
+
+InformationGroup:AddButton("Save Settings", function()
+    local suc, err = pcall(function()
+        local configName = Options.SaveManager_ConfigList and Options.SaveManager_ConfigList.Values and #Options.SaveManager_ConfigList.Values > 0 and Options.SaveManager_ConfigList.Values[1]
+        if not configName then return end
+        Options.SaveManager_ConfigList:SetValue(configName)
+        SaveManager:Save(configName)
+    end)
+    if suc then
+        Script.Functions.Alert("[Save Settings]: Successfully saved your settings ✅")
+    else
+        Script.Functions.Alert("[Save Settings]: Error saving your profiles :( ❌")
+        for i = 1, 10 do
+            warn("[SAVING | ERROR]: "..tostring(err))
+        end
+    end
+end)
+
+local approved = false
+InformationGroup:AddButton("Reset Settings", function()
+    if approved then
+        pcall(function()
+            writefile("voidware_linoria/ink_game/settings/default.json", "[]")
+        end)
+        pcall(function()
+            Library:Unload()
+        end)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua", true))()
+    else
+        Script.Functions.Alert("[Save Settings]: Press the button again to reset your settings. This cannot be undone!", 5)
+        approved = true
+    end
+end)
