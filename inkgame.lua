@@ -1490,6 +1490,11 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun", "zap") do
     
     Toggles.AntiFlingToggle:OnChanged(function(call)
         if call then
+            if not hookmetamethod then
+                Script.Functions.Alert("[Fling Aura]: Unsupported executor :(")
+                Toggles.AntiFlingToggle:SetValue(false)
+                return
+            end
             Script.Temp.PauseAntiFling = nil
             Script.Functions.Alert("Anti Fling Enabled", 3)
             Script.Temp.AntiFlingActive = true
@@ -3439,8 +3444,11 @@ local SecurityGroupBox = Tabs.Main:AddRightGroupbox("Security", "shield") do
         --if shared.CheatEngineMode then
             
         --else
-            Script.Functions.SpoofFlingVelocity(call)
-            Script.Functions.FlingCharacterHook(call)
+            if call and not hookmetamethod then
+                Script.Functions.Alert("[Anticheat Patch]: Unsupported executor :(")
+            end
+            pcall(Script.Functions.SpoofFlingVelocity, call)
+            pcall(Script.Functions.FlingCharacterHook, call)
         --end
     end)
     --[[SecurityGroupBox:AddToggle("PatchAnticheat", {
