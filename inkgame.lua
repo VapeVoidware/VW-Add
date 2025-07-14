@@ -1540,54 +1540,6 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun", "zap") do
         end
     end)
 
-    FunGroupBox:AddToggle("KillauraInkGame", {
-        Text = "Killaura",
-        Default = false
-    })
-
-    FunGroupBox:AddToggle("KillauraFaceTarget", {
-        Text = "Face Target",
-        Default = true
-    })
-
-    Toggles.KillauraInkGame:OnChanged(function(call)
-        if call then
-            pcall(function()
-                if Toggles.RedLightGodmode.Value then
-                    Toggles.RedLightGodmode:SetValue(false)
-                end
-            end)
-            local fork = Script.Functions.GetFork()
-            if not fork then
-                Script.Functions.Alert("No Weapon found!", 3)
-                Toggles.KillauraInkGame:SetValue(false)
-                return
-            end
-            task.spawn(function()
-                repeat
-                    task.wait(0.5)
-                    if Script.GameState == "RedLightGreenLight" then return end
-                    local target = getNearestEnemy(15)
-                    if target and Toggles.KillauraFaceTarget.Value then
-                        local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
-                        if root then
-                            local look = (target.Position - root.Position).Unit
-                            local newCFrame = CFrame.new(root.Position, root.Position + look)
-                            root.CFrame = CFrame.new(root.Position, target.Position)
-                            if KillauraDebug then print("[Killaura Debug] Facing nearest enemy before attack.") end
-                        end
-                    end
-                    Script.Functions.FireForkRemote()
-                    local args = {
-                        CFrame.new(lplr.Character.HumanoidRootPart.Position)
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("rootCFrame"):FireServer(unpack(args))
-                    if KillauraDebug then print("[Killaura Debug] Fired rootCFrame remote.") end
-                until not Toggles.KillauraInkGame.Value or Library.Unloaded
-            end)
-        end
-    end)
-
     FunGroupBox:AddToggle("GhostMode", {
         Text = "Ghost Mode",
         Default = false
@@ -1901,6 +1853,56 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun", "zap") do
                     Script.Temp.FakeDashingFolder:Destroy()
                 end)
             end
+        end
+    end)
+end
+
+local KillauraGroupBox = Tabs.Main:AddLeftGroupbox("Killaura", "sword") do
+    KillauraGroupBox:AddToggle("KillauraInkGame", {
+        Text = "Killaura",
+        Default = false
+    })
+
+    KillauraGroupBox:AddToggle("KillauraFaceTarget", {
+        Text = "Face Target",
+        Default = true
+    })
+
+    Toggles.KillauraInkGame:OnChanged(function(call)
+        if call then
+            pcall(function()
+                if Toggles.RedLightGodmode.Value then
+                    Toggles.RedLightGodmode:SetValue(false)
+                end
+            end)
+            local fork = Script.Functions.GetFork()
+            if not fork then
+                Script.Functions.Alert("No Weapon found!", 3)
+                Toggles.KillauraInkGame:SetValue(false)
+                return
+            end
+            task.spawn(function()
+                repeat
+                    task.wait(0.5)
+                    if Script.GameState == "RedLightGreenLight" then return end
+                    local target = getNearestEnemy(15)
+                    if target and Toggles.KillauraFaceTarget.Value then
+                        local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            local look = (target.Position - root.Position).Unit
+                            local newCFrame = CFrame.new(root.Position, root.Position + look)
+                            root.CFrame = CFrame.new(root.Position, target.Position)
+                            if KillauraDebug then print("[Killaura Debug] Facing nearest enemy before attack.") end
+                        end
+                    end
+                    Script.Functions.FireForkRemote()
+                    local args = {
+                        CFrame.new(lplr.Character.HumanoidRootPart.Position)
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("rootCFrame"):FireServer(unpack(args))
+                    if KillauraDebug then print("[Killaura Debug] Fired rootCFrame remote.") end
+                until not Toggles.KillauraInkGame.Value or Library.Unloaded
+            end)
         end
     end)
 end
