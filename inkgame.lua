@@ -1536,6 +1536,11 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun", "zap") do
         Default = false
     })
 
+    FunGroupBox:AddToggle("KillauraFaceTarget", {
+        Text = "Face Target",
+        Default = true
+    })
+
     Toggles.KillauraInkGame:OnChanged(function(call)
         if call then
             pcall(function()
@@ -1554,7 +1559,7 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun", "zap") do
                     task.wait(0.5)
                     if Script.GameState == "RedLightGreenLight" then return end
                     local target = getNearestEnemy(15)
-                    if target then
+                    if target and Toggles.KillauraFaceTarget.Value then
                         local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
                         if root then
                             local look = (target.Position - root.Position).Unit
