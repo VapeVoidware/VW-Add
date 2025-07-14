@@ -3904,7 +3904,7 @@ local Useful = Tabs.Other:AddRightGroupbox("Useful Stuff", "star") do
                     if DialogueFrameAnnouncement and DialogueFrameAnnouncement.Visible then
                         Script.Functions.SkipDialogue()
                     end
-                    task.wait(0.1)
+                    task.wait(1)
                 end
             end)
         else
