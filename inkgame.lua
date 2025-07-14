@@ -2808,7 +2808,7 @@ local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc", "wrench") do
 
     MiscGroup:AddToggle("AntiVoid", {
         Text = "Anti Void",
-        Default = false
+        Default = true
     })
 
     Toggles.AntiVoid:OnChanged(function(enabled)
