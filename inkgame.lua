@@ -1007,7 +1007,7 @@ function Script.Functions.DistanceFromCharacter(position: Instance | Vector3)
 end
 
 Script.Functions.FixCamera = function()
-    --[[if workspace.CurrentCamera then
+    if workspace.CurrentCamera then
         pcall(function()
             workspace.CurrentCamera:Destroy()
         end)
@@ -1016,7 +1016,7 @@ Script.Functions.FixCamera = function()
     new.Parent = workspace
     workspace.CurrentCamera = new
     new.CameraType = Enum.CameraType.Custom
-    new.CameraSubject = lplr.Character.Humanoid--]]
+    new.CameraSubject = lplr.Character.Humanoid
 end
 
 Script.Functions.RestoreVisibility = function(character)
@@ -2769,6 +2769,7 @@ local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc", "wrench") do
             end
         end
     end)
+    MiscGroup:AddButton("Reset Camera [Might Break your camera!]", Script.Functions.FixCamera)
     MiscGroup:AddButton("Skip Cutscene", function()
         -- Script.Functions.FixCamera
         if camera then
