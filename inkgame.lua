@@ -887,42 +887,74 @@ Script.Functions.GetHumanoid = function()
     return rp
 end
 
+local KillauraDebug = false
 local tools = {"Fork", "Bottle", "Knife"}
 Script.Functions.GetFork = function()
     local res
     for _, index in pairs(tools) do
         local tool = lplr.Character:FindFirstChild(index) or lplr:FindFirstChild("Backpack") and lplr.Backpack:FindFirstChild(index)
         if tool then
+            if KillauraDebug then print("[Killaura Debug] Found tool:", tool.Name, "in", tool.Parent and tool.Parent.Name or "nil") end
             res = tool
             break
         end
     end
+    if not res then
+        if KillauraDebug then print("[Killaura Debug] No valid tool found!") end
+    end
     return res
 end
 
-Script.Functions.FireForkRemote = function()
+local function getNearestEnemy(maxDist)
+    maxDist = maxDist or 15
+    local closest, closestDist = nil, math.huge
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= lplr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") then
+            local hum = player.Character.Humanoid
+            if hum.Health > 0 then
+                local dist = (lplr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if dist < closestDist and dist <= maxDist then
+                    closest = player.Character.HumanoidRootPart
+                    closestDist = dist
+                end
+            end
+        end
+    end
+    if closest then
+        if KillauraDebug then print("[Killaura Debug] Nearest enemy at:", closest.Position, "Distance:", closestDist) end
+    else
+        if KillauraDebug then print("[Killaura Debug] No enemy in range.") end
+    end
+    return closest
+end
+
+Script.Functions.FireForkRemote = function(targetCFrame)
     local fork = Script.Functions.GetFork()
-    if not fork then return end
+    if not fork then if KillauraDebug then print("[Killaura Debug] FireForkRemote: No tool to use!") end return end
 
     if fork.Parent.Name == "Backpack" then
+        if KillauraDebug then print("[Killaura Debug] Equipping tool from backpack:", fork.Name) end
         lplr.Character.Humanoid:EquipTool(fork)
+    else
+        if KillauraDebug then print("[Killaura Debug] Tool already equipped:", fork.Name) end
     end
 
     fork = Script.Functions.GetFork()
-    print(fork)
-    if not fork then return end
+    if KillauraDebug then print("[Killaura Debug] Using tool:", fork and fork.Name or "nil") end
+    if not fork then if KillauraDebug then print("[Killaura Debug] FireForkRemote: Tool missing after equip!") end return end
 
+    if KillauraDebug then print("[Killaura Debug] Firing UsedTool remote (1st call)") end
     local args = {
         "UsingMoveCustom",
         fork,
-        [4] = {
+        nil,
+        {
             Clicked = true
         }
     }
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UsedTool"):FireServer(unpack(args))
-    print("fired1")
-
-    local args = {
+    if KillauraDebug then print("[Killaura Debug] Firing UsedTool remote (2nd call)") end
+    local args2 = {
         "UsingMoveCustom",
         fork,
         true,
@@ -930,9 +962,7 @@ Script.Functions.FireForkRemote = function()
             Clicked = true
         }
     }
-    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UsedTool"):FireServer(unpack(args))
-    print("fired 2")
-    
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UsedTool"):FireServer(unpack(args2))
 end
 
 Script.Functions.JoinDiscordServer = function()
@@ -1352,6 +1382,7 @@ local ESPGroupBox = Tabs.Visuals:AddLeftGroupbox("Hide and Seek ESP", "search") 
                     end
                 end
             else
+                Script.ESPTable[meta.text] = Script.ESPTable[meta.text] or {}
                 for _, esp in pairs(Script.ESPTable[meta.text]) do
                     esp.Destroy()
                 end
@@ -1518,16 +1549,26 @@ local FunGroupBox = Tabs.Main:AddLeftGroupbox("Fun", "zap") do
                 Toggles.KillauraInkGame:SetValue(false)
                 return
             end
-
             task.spawn(function()
                 repeat
                     task.wait(0.5)
                     if Script.GameState == "RedLightGreenLight" then return end
+                    local target = getNearestEnemy(15)
+                    if target then
+                        local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            local look = (target.Position - root.Position).Unit
+                            local newCFrame = CFrame.new(root.Position, root.Position + look)
+                            root.CFrame = CFrame.new(root.Position, target.Position)
+                            if KillauraDebug then print("[Killaura Debug] Facing nearest enemy before attack.") end
+                        end
+                    end
                     Script.Functions.FireForkRemote()
                     local args = {
                         CFrame.new(lplr.Character.HumanoidRootPart.Position)
                     }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("rootCFrame"):FireServer(unpack(args))                  
+                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("rootCFrame"):FireServer(unpack(args))
+                    if KillauraDebug then print("[Killaura Debug] Fired rootCFrame remote.") end
                 until not Toggles.KillauraInkGame.Value or Library.Unloaded
             end)
         end
@@ -1879,6 +1920,7 @@ function Script.Functions.FindInjuredPlayer()
         local CarryPrompt = Script.Functions.FindCarryPrompt(plr)
         if not CarryPrompt then continue end
         if plr.Character and plr.Character:FindFirstChild("SafeRedLightGreenLight") then continue end
+        if plr.Character and plr.Character:FindFirstChild("IsBeingHeld") then continue end
         return plr, CarryPrompt
     end
 end
