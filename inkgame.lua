@@ -1146,8 +1146,12 @@ function Script.Functions.TeleportBackFromSafe()
         warn("[Invalid location]")
         return
     end
-    if lplr.Character then
-        lplr.Character:PivotTo(OldLocation)
+    if not lplr.Character then return end
+    local call = Toggles.AntiFlingToggle.Value
+    Script.Functions.DisableAntiFling()
+    lplr.Character:PivotTo(OldLocation)
+    if call then
+        task.delay(0.5, Script.Functions.EnableAntiFling)
     end
 end
 
