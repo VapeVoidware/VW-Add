@@ -2944,6 +2944,8 @@ Toggles.FOVToggle:OnChanged(function(call)
         Script.Temp.OldFOV = camera and camera.FieldOfView or 60
         task.spawn(function()
             repeat 
+                local AutoRun = lplr:FindFirstChild("AutoRun")
+                if AutoRun and AutoRun.Value then return end
                 if camera then
                     camera.FieldOfView = Options.FOVSlider.Value
                 end
