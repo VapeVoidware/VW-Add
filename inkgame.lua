@@ -2769,7 +2769,7 @@ local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc", "wrench") do
             end
         end
     end)
-    MiscGroup:AddButton("Reset Camera [Might Break your camera!]", Script.Functions.FixCamera)
+    MiscGroup:AddButton("Reset Camera \n [Might Break your camera!]", Script.Functions.FixCamera)
     MiscGroup:AddButton("Skip Cutscene", function()
         -- Script.Functions.FixCamera
         if camera then
@@ -2808,7 +2808,7 @@ local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc", "wrench") do
 
     MiscGroup:AddToggle("AntiVoid", {
         Text = "Anti Void",
-        Default = true
+        Default = false
     })
 
     Toggles.AntiVoid:OnChanged(function(enabled)
