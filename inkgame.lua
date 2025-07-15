@@ -3817,6 +3817,7 @@ States = {
         end)
         local call = true
         task.spawn(function()
+            task.wait(15)
             repeat
                 Script.Functions.WinGlassBridge()
                 task.wait(3)
