@@ -888,7 +888,7 @@ Script.Functions.GetHumanoid = function()
 end
 
 local KillauraDebug = false
-local tools = {"Fork", "Bottle", "Knife"}
+local tools = {"Fork", "Bottle", "Knife", "Power Hold"}
 Script.Functions.GetFork = function()
     local res
     for _, index in pairs(tools) do
