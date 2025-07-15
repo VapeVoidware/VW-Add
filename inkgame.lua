@@ -4089,6 +4089,11 @@ local PlayerAttachGroupBox = Tabs.Other:AddLeftGroupbox("Player Attach", "users-
     PlayerAttachGroupBox:AddToggle("PlayerAttachToggle", {
         Text = "Player Attach",
         Default = false
+    }):AddKeyPicker("PAT", {
+        Mode = "Toggle",
+        Default = "K",
+        Text = "Player Attach",
+        SyncToggleState = true
     })
     PlayerAttachGroupBox:AddSlider("PlayerAttachRange", {
         Text = "Attach Range",
