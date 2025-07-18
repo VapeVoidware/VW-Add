@@ -15,10 +15,13 @@ else
     local suc = pcall(function()
         shared.Voidware_InkGame_Library:Unload()
     end)
-    if not suc then
+    shared.LoadTries = shared.LoadTries or 0
+    if not suc and shared.LoadTries < 3 then
+        shared.LoadTries = shared.LoadTries + 1
         return 
     end
 end
+shared.LoadTries = 0
 
 local isNew = false
 pcall(function()
@@ -79,21 +82,43 @@ if not suc then
 end
 
 --// Library \\--
-local repo = "https://raw.githubusercontent.com/mstudio45/"..tostring(targetlib).."/main/"
+local Library, ThemeManager, SaveManager, Options, Toggles
 
-local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
-shared.Voidware_InkGame_Library = Library
-local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
-local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
-local Options
-local Toggles
-if targetlib == "Obsidian" then
-    Options = getgenv().Library.Options
-    Toggles = getgenv().Library.Toggles
-else 
-    Options = getgenv().Linoria.Options
-    Toggles = getgenv().Linoria.Toggles   
+if targetlib == "Wind" or targetlib == "WindUI" then -- soon :3
+    Library = loadstring(readfile("meow :3"))()
+    ThemeManager = {
+        SetLibrary = function() end,
+        SetFolder = function() end,
+        ApplyToTab = function() end,
+        IgnoreThemeSettings = function() end,
+        SetIgnoreIndexes = function() end,
+    }
+    SaveManager = {
+        SetLibrary = function() end,
+        SetFolder = function() end,
+        BuildConfigSection = function() end,
+        IgnoreThemeSettings = function() end,
+        SetIgnoreIndexes = function() end,
+        Save = function() end,
+        LoadAutoloadConfig = function() end,
+    }
+    Options = getgenv().Options
+    Toggles = getgenv().Toggles
+else
+    local repo = "https://raw.githubusercontent.com/mstudio45/"..tostring(targetlib).."/main/"
+    Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+    ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+    SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+    if targetlib == "Obsidian" then
+        Options = getgenv().Library.Options
+        Toggles = getgenv().Library.Toggles
+    else
+        Options = getgenv().Linoria.Options
+        Toggles = getgenv().Linoria.Toggles
+    end
 end
+
+shared.Voidware_InkGame_Library = Library
 
 local Window = Library:CreateWindow({
 	Title = "Voidware - Ink Game",
@@ -888,7 +913,7 @@ Script.Functions.GetHumanoid = function()
 end
 
 local KillauraDebug = false
-local tools = {"Fork", "Bottle", "Knife", "Power Hold"}
+local tools = {"Fork", "Bottle", "Knife", "Power Hold", "Push"}
 Script.Functions.GetFork = function()
     local res
     for _, index in pairs(tools) do
@@ -1169,7 +1194,7 @@ function Script.Functions.WinGlassBridge()
     if not lplr.Character then return end
     local call = Toggles.AntiFlingToggle.Value
     Script.Functions.DisableAntiFling()
-    lplr.Character:PivotTo(CFrame.new(Vector3.new(-203.9, 520.7, -1534.3485)))
+    lplr.Character:PivotTo(CFrame.new(Vector3.new(-203.9, 520.7, -1534.3485) + Vector3.new(0, 5, 0)))
     if call then
         task.delay(0.5, Script.Functions.EnableAntiFling)
     end
@@ -1281,9 +1306,9 @@ local ESP_META = {
         },
         checktype = "key",
         descendantcheck = function(descendant)
-            local hideAndSeekMap = workspace:FindFirstChild("HideAndSeekMap")
+            local hideAndSeekMap = workspace:FindFirstChild("Effects")
             if not hideAndSeekMap then return end
-            if descendant:IsA("Model") and descendant.Parent and descendant.Parent.Name == "KEYS" and descendant.Parent.Parent == hideAndSeekMap then
+            if descendant:IsA("Model") and descendant.Parent and string.find(descendant.Name, "DroppedKey") then
                 Script.Functions.KeyESP(descendant)
             end
         end
@@ -1317,7 +1342,7 @@ local ESP_META = {
         descendantcheck = function(descendant)
             local hideAndSeekMap = workspace:FindFirstChild("HideAndSeekMap")
             if not hideAndSeekMap then return end
-            if descendant:IsA("Model") and descendant.Name == "EXITDOOR" and descendant.PrimaryPart and descendant:GetAttribute("CANESCAPE") then
+            if descendant:IsA("Model") and descendant.Name == "EXITDOOR" and descendant.Parent ~= nil and descendant:GetAttribute("CANESCAPE") then
                 Script.Functions.EscapeDoorESP(descendant)
             end
         end
@@ -1341,9 +1366,9 @@ local ESPGroupBox = Tabs.Visuals:AddLeftGroupbox("Hide and Seek ESP", "search") 
                         Script.Functions[meta.metaName](player)
                     end
                 elseif meta.checktype == "key" then
-                    local hideAndSeekMap = workspace:FindFirstChild("HideAndSeekMap")
+                    local hideAndSeekMap = workspace:FindFirstChild("Effects")
                     if hideAndSeekMap then
-                        local keysFolder = hideAndSeekMap:FindFirstChild("KEYS")
+                        local keysFolder = hideAndSeekMap
                         if keysFolder then
                             for _, key in pairs(keysFolder:GetChildren()) do
                                 Script.Functions.KeyESP(key)
@@ -1367,20 +1392,9 @@ local ESPGroupBox = Tabs.Visuals:AddLeftGroupbox("Hide and Seek ESP", "search") 
                 elseif meta.checktype == "escapedoor" then
                     local hideAndSeekMap = workspace:FindFirstChild("HideAndSeekMap")
                     if hideAndSeekMap then
-                        local newFixedDoors = hideAndSeekMap:FindFirstChild("NEWFIXEDDOORS")
-                        if newFixedDoors then
-                            for _, floor in pairs(newFixedDoors:GetChildren()) do
-                                if floor.Name:match("^Floor") then
-                                    for _, group in pairs(floor:GetChildren()) do
-                                        if group.Name == "EXITDOORS" then
-                                            for _, door in pairs(group:GetChildren()) do
-                                                if door:IsA("Model") and door.Name == "EXITDOOR" and door.PrimaryPart and door:GetAttribute("CANESCAPE") then
-                                                    Script.Functions.EscapeDoorESP(door)
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
+                        for _, descendant in ipairs(hideAndSeekMap:GetDescendants()) do
+                            if descendant:IsA("Model") and descendant.Name == "EXITDOOR" and descendant.Parent ~= nil and descendant:GetAttribute("CANESCAPE") then
+                                Script.Functions.EscapeDoorESP(descendant)
                             end
                         end
                     end
@@ -1863,6 +1877,24 @@ local KillauraGroupBox = Tabs.Main:AddLeftGroupbox("Killaura", "sword") do
         Default = false
     })
 
+    KillauraGroupBox:AddToggle("PushAura", {
+        Text = "Push Aura",
+        Default = false
+    }):OnChanged(function(call)
+        if call then
+            local i = table.find(tools, "Push")
+            if not i then
+                table.insert(tools, "Push")
+            end
+            Script.Functions.Alert("Push Aura will only work with Killaura!", 1.5)
+        else
+            local i = table.find(tools, "Push")
+            if i then
+                table.remove(tools, i)
+            end
+        end
+    end)
+
     KillauraGroupBox:AddToggle("KillauraFaceTarget", {
         Text = "Face Target",
         Default = true
@@ -1905,6 +1937,7 @@ local KillauraGroupBox = Tabs.Main:AddLeftGroupbox("Killaura", "sword") do
             end)
         end
     end)
+
 end
 
 local fireproximityprompt = fireproximityprompt or function(prompt)
@@ -2226,11 +2259,36 @@ local GlassBridgeGroup = Tabs.Main:AddLeftGroupbox("Glass Bridge", "bridge") do
 end
 
 local InformationGroup = Tabs.Main:AddRightGroupbox("Information", "info") do
+    if targetlib == "Wind" then
+        InformationGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
+    end
     InformationGroup:AddLabel("Welcome to Voidware!")
     InformationGroup:AddLabel("Make sure to join our discord \n server for updates!")
-    InformationGroup:AddLabel("")
-    InformationGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
+    if targetlib ~= "Wind" then
+        InformationGroup:AddLabel("")
+    end
+    if targetlib ~= "Wind" then
+        InformationGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
+    end
     InformationGroup:AddButton("Unload", function() Library:Unload() end)
+
+    InformationGroup:AddDivider()
+    InformationGroup:AddDropdown("LibraryChoice", {
+        Text = "Library Choice",
+        Values = allowedlibs,
+        Default = targetlib
+    })
+    Options.LibraryChoice:OnChanged(function(val)
+        if val == targetlib then return end
+        writefile("Voidware_InkGame_Library_Choice.txt", val)
+        Library:Unload()
+        if shared.VoidDev and isfile("inkgame.lua") then
+            loadstring(readfile("inkgame.lua"))()
+        else
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua", true))()
+        end
+    end)
+    InformationGroup:AddDivider()
 end
 
 function Script.Functions.GetHider()
@@ -2310,6 +2368,100 @@ local HideAndSeekGroup = Tabs.Main:AddRightGroupbox("Hide And Seeek", "search") 
         end
         Script.Functions.TeleportSafeHidingSpot()
     end)
+    function Script.Functions.FetchHider()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= lplr and player:GetAttribute("IsHider") and player.Character and player.Character:FindFirstChild("Humanoid") then
+                local hum = player.Character.Humanoid
+                if hum.Health > 0 and not player.Character:FindFirstChild("Dead") then
+                    return player
+                end
+            end
+        end
+        return nil
+    end
+    
+    function Script.Functions.GetKnife()
+        local tool = lplr.Character and lplr.Character:FindFirstChild("Knife")
+        if not tool and lplr:FindFirstChild("Backpack") then
+            tool = lplr.Backpack:FindFirstChild("Knife")
+        end
+        return tool
+    end
+    
+    function Script.Functions.FireKnifeRemote(target)
+        local knife = Script.Functions.GetKnife()
+        if not knife then return end
+        if knife.Parent == lplr.Backpack then
+            local humanoid = lplr.Character and lplr.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid:EquipTool(knife)
+            end
+            knife = Script.Functions.GetKnife()
+            if not knife or knife.Parent ~= lplr.Character then return end
+        end
+        local args = {
+            "UsingMoveCustom",
+            knife,
+            nil,
+            {
+                Clicked = true
+            }
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UsedTool"):FireServer(unpack(args))
+    
+        local args2 = {
+            "UsingMoveCustom",
+            knife,
+            true,
+            {
+                Clicked = true
+            }
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UsedTool"):FireServer(unpack(args2))
+    end
+
+    HideAndSeekGroup:AddToggle("KillHidersToggle", {
+        Text = "Hiders Killaura",
+        Default = false
+    }):OnChanged(function(enabled)
+        if enabled then
+            Script.Temp.KillHidersActive = true
+            task.spawn(function()
+                while Script.Temp.KillHidersActive and Script.GameState == "HideAndSeek" and not Library.Unloaded do
+                    local hider = Script.Functions.FetchHider()
+                    if not hider then
+                        Script.Functions.Alert("No valid hiders found!", 2)
+                        break
+                    end
+                    local hiderChar = hider.Character
+                    local hiderRoot = hiderChar and hiderChar:FindFirstChild("HumanoidRootPart")
+                    local myChar = lplr.Character
+                    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    if hiderRoot and myRoot then
+                        if (myRoot.Position - hiderRoot.Position).Magnitude > 6 then
+                            myChar:PivotTo(CFrame.new(hiderRoot.Position + Vector3.new(0, 0, 3)))
+                            task.wait(0.2)
+                        else
+                            Script.Functions.FireKnifeRemote(hider)
+                            task.wait(0.25)
+                        end
+                    else
+                        task.wait(0.5)
+                    end
+                    while hider and hider.Character and hider.Character:FindFirstChild("Humanoid") and hider.Character.Humanoid.Health > 0 and not hider.Character:FindFirstChild("Dead") and Script.Temp.KillHidersActive and Script.GameState == "HideAndSeek" do
+                        Script.Functions.FireKnifeRemote(hider)
+                        task.wait(0.25)
+                    end
+                end
+                Script.Temp.KillHidersActive = false
+                if Toggles.KillHidersToggle.Value then
+                    Toggles.KillHidersToggle:SetValue(false)
+                end
+            end)
+        else
+            Script.Temp.KillHidersActive = false
+        end
+    end)
 end
 
 function Script.Functions.Wallcheck(attackerCharacter, targetCharacter, additionalIgnore)
@@ -2334,16 +2486,26 @@ function Script.Functions.Wallcheck(attackerCharacter, targetCharacter, addition
         end
     end
     raycastParams.FilterDescendantsInstances = ignoreList
-    local raycastResult = workspace:Raycast(origin, direction, raycastParams)
-    if raycastResult then
+
+    local maxAttempts = 5
+    local currentOrigin = origin
+    for i = 1, maxAttempts do
+        local raycastResult = workspace:Raycast(currentOrigin, targetPosition - currentOrigin, raycastParams)
+        if not raycastResult then
+            return true 
+        end
         if raycastResult.Instance:IsDescendantOf(targetCharacter) then
             return true
+        end
+        if (not raycastResult.Instance.CanCollide) or (raycastResult.Instance.Transparency > 0.8) then
+            table.insert(ignoreList, raycastResult.Instance)
+            raycastParams.FilterDescendantsInstances = ignoreList
+            currentOrigin = raycastResult.Position + (direction.Unit * 0.1)
         else
             return false
         end
-    else
-        return true
     end
+    return false
 end
 
 local function isGuard(model)
@@ -2351,7 +2513,7 @@ local function isGuard(model)
     if not model:FindFirstChild("TypeOfGuard") then return end
     local lower = model.Name:lower()
     local descendant = model
-    if string.find(descendant.Name, "RebelGuard") or string.find(descendant.Name, "FinalRebel") or string.find(descendant.Name, "HallwayGuard") or string.find(string.lower(descendant.Name), "aggro") then
+    if string.find(descendant.Name, "Rebel") or string.find(descendant.Name, "FinalRebel") or string.find(descendant.Name, "HallwayGuard") or string.find(string.lower(descendant.Name), "aggro") then
         local hum = model:FindFirstChild("Humanoid")
         if not hum then return false end
         return not model:FindFirstChild("Dead") and hum.Health > 0
@@ -2362,12 +2524,20 @@ end
 function Script.Functions.PivotRebelGuardsToPlayer()
     local myChar = lplr.Character
     if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-    local myPos = myChar.HumanoidRootPart.Position
+    local myRoot = myChar.HumanoidRootPart
+    local myPos = myRoot.Position
+    local forward = myRoot.CFrame.LookVector
+    local offsetDist = 4
+    local sideOffset = 2
+    local guardCount = 0
     for _, guard in ipairs(Script.Temp.ValidGuards or {}) do
         if isGuard(guard) and guard:FindFirstChild("HumanoidRootPart") then
-            local guardRoot = guard.HumanoidRootPart
-            local lookCFrame = CFrame.new(guardRoot.Position, myPos)
-            guardRoot.CFrame = lookCFrame
+            guardCount = guardCount + 1
+            local angle = (guardCount - 1) * math.rad(30) - math.rad(15 * ((#Script.Temp.ValidGuards or 1) - 1))
+            local offset = CFrame.fromAxisAngle(Vector3.new(0,1,0), angle) * Vector3.new(0, 0, -offsetDist)
+            local targetPos = myRoot.Position + myRoot.CFrame:VectorToWorldSpace(offset)
+            local targetCFrame = CFrame.new(targetPos, myRoot.Position)
+            guard:PivotTo(targetCFrame)
         end
     end
 end
@@ -2452,8 +2622,28 @@ local RebelGroup = Tabs.Main:AddRightGroupbox("Rebel", "sword") do
     end)
     
     RebelGroup:AddButton("Bring All Guards", function()
-        Script.Functions.PivotRebelGuardsToPlayer()
+        pcall(function()
+            Script.Temp.ValidGuards = {}
+            local Live = workspace:WaitForChild("Live")
+            for _, v in pairs(Live:GetChildren()) do
+                if isGuard(v) then
+                    table.insert(Script.Temp.ValidGuards, v)
+                end
+            end
+        end)
+        for i = 1, Options.BringLoopSlider and Options.BringLoopSlider.Value or 250 do
+            task.wait()
+            Script.Functions.PivotRebelGuardsToPlayer()
+        end
     end)
+
+    RebelGroup:AddSlider("BringLoopSlider", {
+        Text = "Bring Guards Loop Count",
+        Default = 100,
+        Min = 10,
+        Max = 300,
+        Rounding = 1
+    })
 
     RebelGroup:AddToggle("GunMods", { Text = "Gun Mods", Default = false })
     
@@ -2509,6 +2699,11 @@ local RebelGroup = Tabs.Main:AddRightGroupbox("Rebel", "sword") do
     Toggles.GunMods:OnChanged(function(enabled)
         patchGunStats(enabled)
     end)
+
+    RebelGroup:AddToggle("AutoSteal", {
+        Text = "Auto Steal Guns",
+        Default = false
+    })
 end
 
 Script.Temp.ValidGuards = {}
@@ -2536,14 +2731,18 @@ task.spawn(function()
     end)
 end)
 
-local function getNearestGuard(camPos, wallcheckEnabled, character)
+local function getNearestGuard(originPos, wallcheckEnabled, character)
     local closest, closestDist = nil, math.huge
     for _, model in ipairs(Script.Temp.ValidGuards or {}) do
         if isGuard(model) then
             local part = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChildWhichIsA("BasePart")
             if part then
-                if not wallcheckEnabled or Script.Functions.Wallcheck(character, model) then
-                    local dist = (part.Position - camPos).Magnitude
+                local canSee = true
+                if wallcheckEnabled then
+                    canSee = Script.Functions.Wallcheck(character, model)
+                end
+                if canSee then
+                    local dist = (part.Position - originPos).Magnitude
                     if dist < closestDist then
                         closest = part
                         closestDist = dist
@@ -2654,14 +2853,27 @@ local AutoShootGroup = Tabs.Main:AddRightGroupbox("Auto Shoot", "target") do
                             end
                         end
                         if heldGun then
-                            local cam = workspace.CurrentCamera
-                            local camPos = cam.CFrame.Position
-                            local closest = getNearestGuard(camPos, Toggles.AutoShootWallcheck.Value, character)
-                            if closest and (closest.Position - camPos).Magnitude < 100 then
-                                local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                                if Remotes and Remotes:FindFirstChild("FiredGunClient") then
-                                    Remotes.FiredGunClient:FireServer(heldGun, {FiredGun = true})
-                                end
+                            local root = character:FindFirstChild("HumanoidRootPart")
+                            local target = getNearestGuard(root and root.Position or Vector3.zero, Toggles.AutoShootWallcheck.Value, character)
+                            if target and (target.Position - root.Position).Magnitude < 100 then
+                                local map = workspace:FindFirstChild("Map")
+                                local baseplate = map and map:FindFirstChild("Baseplate") or workspace
+                                local firePos = root.Position
+                                local bulletPos = target.Position
+                                local args = {
+                                    heldGun,
+                                    {
+                                        ClientRayInstance = baseplate,
+                                        ClientRayNormal = Vector3.yAxis,
+                                        ClientRayPosition = bulletPos,
+                                        FiredGun = true,
+                                        HitTargets = {},
+                                        bulletSizeC = Vector3.new(0.01, 0.01, (bulletPos - firePos).Magnitude),
+                                        bulletCF = CFrame.new(firePos, bulletPos),
+                                        FirePosition = firePos
+                                    }
+                                }
+                                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("FiredGunClient"):FireServer(unpack(args))
                                 task.wait(0.15)
                             else
                                 task.wait(0.1)
@@ -2864,6 +3076,28 @@ local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc", "wrench") do
         end)
     end
 
+    function Script.Functions.CleanAntiVoid()
+        if Script.Temp.AntiVoidLoop then
+            task.cancel(Script.Temp.AntiVoidLoop)
+            Script.Temp.AntiVoidLoop = nil
+        end
+        
+        if Script.Temp.AntiVoidConnection then
+            Script.Temp.AntiVoidConnection:Disconnect()
+            Script.Temp.AntiVoidConnection = nil
+        end
+        
+        if Script.Temp.AntiVoidRespawn then
+            Script.Temp.AntiVoidRespawn:Disconnect()
+            Script.Temp.AntiVoidRespawn = nil
+        end
+        
+        if Script.Temp.AntiVoidPart then
+            Script.Temp.AntiVoidPart:Destroy()
+            Script.Temp.AntiVoidPart = nil
+        end
+    end
+
     MiscGroup:AddToggle("AntiVoid", {
         Text = "Anti Void",
         Default = false
@@ -2933,25 +3167,7 @@ local MiscGroup = Tabs.Misc:AddLeftGroupbox("Misc", "wrench") do
             Script.Functions.Alert("Anti Void Disabled", 3)
             Script.Temp.AntiVoidEnabled = false
             
-            if Script.Temp.AntiVoidLoop then
-                task.cancel(Script.Temp.AntiVoidLoop)
-                Script.Temp.AntiVoidLoop = nil
-            end
-            
-            if Script.Temp.AntiVoidConnection then
-                Script.Temp.AntiVoidConnection:Disconnect()
-                Script.Temp.AntiVoidConnection = nil
-            end
-            
-            if Script.Temp.AntiVoidRespawn then
-                Script.Temp.AntiVoidRespawn:Disconnect()
-                Script.Temp.AntiVoidRespawn = nil
-            end
-            
-            if Script.Temp.AntiVoidPart then
-                Script.Temp.AntiVoidPart:Destroy()
-                Script.Temp.AntiVoidPart = nil
-            end
+            Script.Functions.CleanAntiVoid()
         end
     end)
     --[[MiscGroup:AddButton("Teleport To Safe Place", function()
@@ -3695,15 +3911,26 @@ local PerformanceGroupBox = Tabs.Misc:AddRightGroupbox("Performance", "gauge") d
         Text = "Disable Effects",
         Default = false
     })
+    function Script.Functions.SafeCleanEffects()
+        if not workspace:FindFirstChild("Effects") then return end
+        for _, v in pairs(workspace.Effects:GetDescendants()) do
+            if v.ClassName ~= "Folder" then
+                pcall(function()
+                    v:Destroy()
+                end)
+            end
+        end
+    end
     Toggles.DisableEffects:OnChanged(function(call)
         if call then
             local Effects = workspace:WaitForChild("Effects", 15)
             if not Effects then return end
             Effects:ClearAllChildren()
             Script.Temp.DisableEffectsConnection = Effects.ChildAdded:Connect(function(child)
+                if child.ClassName == "Folder" then return end
                 pcall(function()
                     child:Destroy()
-                    workspace.Effects:ClearAllChildren()
+                    Script.Functions.SafeCleanEffects()
                 end)
             end)
         else
@@ -3717,7 +3944,7 @@ local PerformanceGroupBox = Tabs.Misc:AddRightGroupbox("Performance", "gauge") d
     end)
     PerformanceGroupBox:AddButton("Clear Effects Cache", function()
         if workspace:FindFirstChild("Effects") then
-            workspace.Effects:ClearAllChildren()
+            Script.Functions.SafeCleanEffects()
         end
     end)
 end
@@ -3881,6 +4108,10 @@ Library:GiveSignal(workspace:WaitForChild("Values"):WaitForChild("CurrentGame"):
                 Toggles[meta.metaName]:SetValue(true)
             end
         end
+        for _, espType in pairs(Script.ESPTable.Key) do
+            if not espType.Destroy then continue end
+            pcall(espType.Destroy)
+        end
     end
 end))
 
@@ -3975,6 +4206,28 @@ local Useful = Tabs.Other:AddRightGroupbox("Useful Stuff", "star") do
     end)
 end
 
+local votes = {"StopPlaying", "KeepPlaying"}
+function Script.Functions.CastVote(vote)
+    local args = {
+        {
+            Voting = vote
+        }
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ExtraTemporaryRemote"):FireServer(unpack(args))
+end
+
+local AutoVoteGroup = Tabs.Other:AddRightGroupbox("Auto Vote") do
+    AutoVoteGroup:AddToggle("AutoVoteToggle", {
+        Text = "Auto Vote",
+        Default = false
+    })
+    AutoVoteGroup:AddDropdown("VoteOptions", {
+        Text = "Vote Options",
+        Values = votes,
+        Default = "KeepPlaying"
+    })
+end
+
 local AntiDeathGroup = Tabs.Other:AddRightGroupbox("Anti Death", "skull") do
     AntiDeathGroup:AddToggle("AntiDeathToggle", {
         Text = "Anti Death",
@@ -3989,6 +4242,7 @@ local AntiDeathGroup = Tabs.Other:AddRightGroupbox("Anti Death", "skull") do
         Rounding = 1
     })
     
+    Script.Temp.AntiDeathTPToggled = false
     Toggles.AntiDeathToggle:OnChanged(function(call)
         if call then
             Script.Temp.AntiDeathTask = task.spawn(function()
@@ -3998,9 +4252,15 @@ local AntiDeathGroup = Tabs.Other:AddRightGroupbox("Anti Death", "skull") do
                         local hum = lplr.Character:FindFirstChildOfClass("Humanoid")
                         if not hum then return end
                         if hum.Health <= Options.AntiDeathHealthThreshold.Value then
+                            if Script.Temp.AntiDeathTPToggled then return end
+                            if Toggles.PlayerAttachToggle and Toggles.PlayerAttachToggle.Value then
+                                Toggles.PlayerAttachToggle:SetValue(false)
+                            else
+                                Script.Temp.AntiDeathTPToggled = true
+                            end
                             Script.Functions.ToggleTPTSP()
                         else
-                            if Toggles.TeleportToSafePlace.Value then
+                            if Toggles.TeleportToSafePlace.Value and Script.Temp.AntiDeathTPToggled then
                                 Toggles.TeleportToSafePlace:SetValue(false)
                             end
                         end
@@ -4190,6 +4450,12 @@ Library:GiveSignal(ProximityPromptService.PromptShown:Connect(function(prompt)
     if Toggles.NoInteractDelay.Value then
         prompt.HoldDuration = 0
     end
+    if Toggles.AutoSteal and Toggles.AutoSteal.Value then
+        if prompt.Name == "StealPrompt" then
+            prompt.HoldDuration = 0
+            fireproximityprompt(prompt, 1)
+        end
+    end
 end))
 
 Library:GiveSignal(UserInputService.JumpRequest:Connect(function()
@@ -4213,6 +4479,13 @@ end))
 task.spawn(function() pcall(Script.Functions.OnLoad) end)
 
 Library:OnUnload(function()
+    if Library._signals then
+        for _, v in pairs(Library._signals) do
+            pcall(function()
+                v:Disconnect()
+            end)
+        end
+    end
     pcall(function()
         Script.Maid:Clean()
     end)
@@ -4227,21 +4500,13 @@ Library:OnUnload(function()
         end
     end
     pcall(Script.Functions.RevertAntiFlingDetection)
+    pcall(Script.Functions.CleanAntiVoid)
     Library.Unloaded = true
     getgenv().voidware_loaded = false
     shared.Voidware_InkGame_Library = nil
 end)
 
-local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu", "menu")
 local CreditsGroup = Tabs["UI Settings"]:AddRightGroupbox("Credits", "heart")
-
-MenuGroup:AddToggle("KeybindMenuOpen", { Default = false, Text = "Open Keybind Menu", Callback = function(value) Library.KeybindFrame.Visible = value end})
-MenuGroup:AddToggle("ShowCustomCursor", {Text = "Custom Cursor", Default = true, Callback = function(Value) Library.ShowCustomCursor = Value end})
-MenuGroup:AddDivider()
-MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = false, Text = "Menu keybind" })
-MenuGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
-MenuGroup:AddButton("Unload", function() Library:Unload() end)
-
 CreditsGroup:AddLabel("erchodev#0 - script dev")
 CreditsGroup:AddLabel("Jorsan - Mingle Support & Godmode")
 CreditsGroup:AddLabel("linoria - ui library")
@@ -4250,81 +4515,77 @@ CreditsGroup:AddLabel("mspaint v2")
 CreditsGroup:AddLabel("Inf Yield")
 CreditsGroup:AddLabel("Please notify me if you need \n credits (erchodev#0 on discord)")
 
-Library.ToggleKeybind = Options.MenuKeybind
+if targetlib ~= "Wind" then
+    local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu", "menu")
 
-Toggles.KeybindMenuOpen:OnChanged(function(call)
-    if call then
-        if Services.UserInputService.TouchEnabled and not Services.UserInputService.KeyboardEnabled and not Services.UserInputService.MouseEnabled then
-            Script.Functions.Alert("Keybind Menu Disabled on mobile", 1.5)
-            Toggles.KeybindMenuOpen:SetValue(false)
+    MenuGroup:AddToggle("KeybindMenuOpen", { Default = false, Text = "Open Keybind Menu", Callback = function(value) Library.KeybindFrame.Visible = value end})
+    MenuGroup:AddToggle("ShowCustomCursor", {Text = "Custom Cursor", Default = true, Callback = function(Value) Library.ShowCustomCursor = Value end})
+    MenuGroup:AddDivider()
+    MenuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = false, Text = "Menu keybind" })
+    MenuGroup:AddButton("Join Discord Server", Script.Functions.JoinDiscordServer)
+    MenuGroup:AddButton("Unload", function() Library:Unload() end)
+
+    Library.ToggleKeybind = Options.MenuKeybind
+
+    Toggles.KeybindMenuOpen:OnChanged(function(call)
+        if call then
+            if Services.UserInputService.TouchEnabled and not Services.UserInputService.KeyboardEnabled and not Services.UserInputService.MouseEnabled then
+                Script.Functions.Alert("Keybind Menu Disabled on mobile", 1.5)
+                Toggles.KeybindMenuOpen:SetValue(false)
+            end
         end
-    end
-end)
-
-ThemeManager:SetLibrary(Library)
-SaveManager:SetLibrary(Library)
-
-SaveManager:IgnoreThemeSettings()
-
-SaveManager:SetIgnoreIndexes({  })
--- "MenuKeybind"
-
-ThemeManager:SetFolder("voidware_linoria")
-SaveManager:SetFolder("voidware_linoria/ink_game")
-
-SaveManager:BuildConfigSection(Tabs["UI Settings"])
-
-ThemeManager:ApplyToTab(Tabs["UI Settings"])
-
-SaveManager:LoadAutoloadConfig()
-
-InformationGroup:AddDivider()
-InformationGroup:AddDropdown("LibraryChoice", {
-    Text = "Library Choice",
-    Values = allowedlibs,
-    Default = targetlib
-})
-Options.LibraryChoice:OnChanged(function(val)
-    if val == targetlib then return end
-    writefile("Voidware_InkGame_Library_Choice.txt", val)
-    Library:Unload()
-    if shared.VoidDev and isfile("inkgame.lua") then
-        loadstring(readfile("inkgame.lua"))()
-    else
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua", true))()
-    end
-end)
-InformationGroup:AddDivider()
-
-InformationGroup:AddButton("Save Settings", function()
-    local suc, err = pcall(function()
-        local configName = Options.SaveManager_ConfigList and Options.SaveManager_ConfigList.Values and #Options.SaveManager_ConfigList.Values > 0 and Options.SaveManager_ConfigList.Values[1]
-        if not configName then return end
-        Options.SaveManager_ConfigList:SetValue(configName)
-        SaveManager:Save(configName)
     end)
-    if suc then
-        Script.Functions.Alert("[Save Settings]: Successfully saved your settings ✅")
-    else
-        Script.Functions.Alert("[Save Settings]: Error saving your profiles :( ❌")
-        for i = 1, 10 do
-            warn("[SAVING | ERROR]: "..tostring(err))
-        end
-    end
-end)
 
-local approved = false
-InformationGroup:AddButton("Reset Settings", function()
-    if approved then
-        pcall(function()
-            writefile("voidware_linoria/ink_game/settings/default.json", "[]")
+    ThemeManager:SetLibrary(Library)
+    SaveManager:SetLibrary(Library)
+
+    SaveManager:IgnoreThemeSettings()
+
+    SaveManager:SetIgnoreIndexes({  })
+    -- "MenuKeybind"
+
+    ThemeManager:SetFolder("voidware_linoria")
+    SaveManager:SetFolder("voidware_linoria/ink_game")
+
+    SaveManager:BuildConfigSection(Tabs["UI Settings"])
+
+    ThemeManager:ApplyToTab(Tabs["UI Settings"])
+
+    SaveManager:LoadAutoloadConfig()
+
+    InformationGroup:AddButton("Save Settings", function()
+        local suc, err = pcall(function()
+            local configName = Options.SaveManager_ConfigList and Options.SaveManager_ConfigList.Values and #Options.SaveManager_ConfigList.Values > 0 and Options.SaveManager_ConfigList.Values[1]
+            if not configName then return end
+            Options.SaveManager_ConfigList:SetValue(configName)
+            SaveManager:Save(configName)
         end)
-        pcall(function()
-            Library:Unload()
-        end)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua", true))()
-    else
-        Script.Functions.Alert("[Save Settings]: Press the button again to reset your settings. This cannot be undone!", 5)
-        approved = true
-    end
-end)
+        if suc then
+            Script.Functions.Alert("[Save Settings]: Successfully saved your settings ✅")
+        else
+            Script.Functions.Alert("[Save Settings]: Error saving your profiles :( ❌")
+            for i = 1, 10 do
+                warn("[SAVING | ERROR]: "..tostring(err))
+            end
+        end
+    end)
+
+    local approved = false
+    InformationGroup:AddButton("Reset Settings", function()
+        if approved then
+            pcall(function()
+                writefile("voidware_linoria/ink_game/settings/default.json", "[]")
+            end)
+            pcall(function()
+                Library:Unload()
+            end)
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua", true))()
+        else
+            Script.Functions.Alert("[Save Settings]: Press the button again to reset your settings. This cannot be undone!", 5)
+            approved = true
+        end
+    end)
+else
+    Library.RuntimeLib:LoadSaving()
+    Library.RuntimeLib:LoadThemes()
+end
