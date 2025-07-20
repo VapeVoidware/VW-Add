@@ -579,11 +579,20 @@ Script.Functions.CompleteDalgonaGame = function()
 end
 
 Script.Functions.PullRope = function(perfect)
-    local args = {
-        {
-            PerfectQTE = true
+    local args = {}
+    if perfect then
+        args = {
+            {
+                GameQTE = true
+            }
         }
-    }
+    else
+        args = {
+            {
+                Failed = true
+            }
+        }
+    end
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("TemporaryReachedBindable"):FireServer(unpack(args))
 end
 
@@ -1147,6 +1156,16 @@ function Script.Functions.WinRLGL()
     local call = Toggles.AntiFlingToggle.Value
     Script.Functions.DisableAntiFling()
     lplr.Character:PivotTo(CFrame.new(Vector3.new(-100.8, 1030, 115)))
+    if call then
+        task.delay(0.5, Script.Functions.EnableAntiFling)
+    end
+end
+
+function Script.Functions.WinJumpRope()
+    if not lplr.Character then return end
+    local call = Toggles.AntiFlingToggle.Value
+    Script.Functions.DisableAntiFling()
+    lplr.Character:PivotTo(CFrame.new(Vector3.new(732.4, 197.14, 931.1644)))
     if call then
         task.delay(0.5, Script.Functions.EnableAntiFling)
     end
@@ -1877,6 +1896,14 @@ local KillauraGroupBox = Tabs.Main:AddLeftGroupbox("Killaura", "sword") do
         Default = false
     })
 
+    KillauraGroupBox:AddSlider("KillauraRange", {
+        Text = "Killaura Range",
+        Default = 15,
+        Min = 1,
+        Max = 30,
+        Rounding = 1
+    })
+
     KillauraGroupBox:AddToggle("PushAura", {
         Text = "Push Aura",
         Default = false
@@ -1917,7 +1944,7 @@ local KillauraGroupBox = Tabs.Main:AddLeftGroupbox("Killaura", "sword") do
                 repeat
                     task.wait(0.5)
                     if Script.GameState == "RedLightGreenLight" then return end
-                    local target = getNearestEnemy(15)
+                    local target = getNearestEnemy(Options.KillauraRange and Options.KillauraRange.Value or 15)
                     if target and Toggles.KillauraFaceTarget.Value then
                         local root = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
                         if root then
@@ -2057,7 +2084,8 @@ local GreenLightRedLightGroup = Tabs.Main:AddLeftGroupbox("Red Light / Green Lig
         Script.Functions.BypassRagdoll()
         --Script.Functions.Alert("Soon...Use the Remove Ragdoll Effect button in the meantime", 3)
     end)
-    GreenLightRedLightGroup:AddButton("Bring Injured Player", function()
+
+    GreenLightRedLightGroup:AddButton("Bring Random Injured Player", function()
         local injuredPlayer, carryPrompt = Script.Functions.FindInjuredPlayer()
         if not injuredPlayer or not carryPrompt then
             Script.Functions.Alert("No injured player found!", 2)
@@ -2078,6 +2106,82 @@ local GreenLightRedLightGroup = Tabs.Main:AddLeftGroupbox("Red Light / Green Lig
             task.wait(0.2)
             Script.Temp.PauseAntiFling = false
         end
+    end)
+
+    function Script.Functions.GetAllInjuredPlayers()
+        local injured = {}
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr == lplr then continue end
+            if plr:GetAttribute("IsDead") then continue end
+            local CarryPrompt = Script.Functions.FindCarryPrompt(plr)
+            if not CarryPrompt then continue end
+            if plr.Character and plr.Character:FindFirstChild("SafeRedLightGreenLight") then continue end
+            if plr.Character and plr.Character:FindFirstChild("IsBeingHeld") then continue end
+            table.insert(injured, {player = plr, carryPrompt = CarryPrompt})
+        end
+        return injured
+    end
+
+    GreenLightRedLightGroup:AddDropdown("RLGLInjuredPlayer", {
+        Text = "Bring Injured Player",
+        Values = {},
+        AllowNull = true
+    })
+    local function RefreshRLGLInjuredDropdown()
+        local injured = Script.Functions.GetAllInjuredPlayers()
+        local names = {}
+        for _, entry in ipairs(injured) do
+            table.insert(names, entry.player.DisplayName .. " [" .. entry.player.Name .. "]")
+        end
+        print(#names)
+        Options.RLGLInjuredPlayer:SetValues(names)
+    end
+    Library:GiveSignal(Players.PlayerAdded:Connect(RefreshRLGLInjuredDropdown))
+    Library:GiveSignal(Players.PlayerRemoving:Connect(RefreshRLGLInjuredDropdown))
+    RefreshRLGLInjuredDropdown()
+    Options.RLGLInjuredPlayer:OnChanged(function(val)
+        if not val then return end
+        local injured = Script.Functions.GetAllInjuredPlayers()
+        local selected = nil
+        for _, entry in ipairs(injured) do
+            local display = entry.player.DisplayName .. " [" .. entry.player.Name .. "]"
+            if display == val then
+                selected = entry
+                break
+            end
+        end
+        if not selected then
+            Script.Functions.Alert("No injured player found!", 2)
+            return
+        end
+        local injuredPlayer, carryPrompt = selected.player, selected.carryPrompt
+        if lplr.Character and injuredPlayer.Character and injuredPlayer.Character.PrimaryPart then
+            Script.Temp.PauseAntiFling = true
+            if Toggles.RedLightGodmode.Value then
+                Toggles.RedLightGodmode:SetValue(false)
+            end
+            lplr.Character:PivotTo(injuredPlayer.Character:GetPrimaryPartCFrame())
+            task.wait(0.2)
+            Script.Functions.FireCarryPrompt(injuredPlayer)
+            task.wait(0.2)
+            Script.Functions.WinRLGL()
+            task.wait(0.2)
+            Script.Functions.UnCarryPerson()
+            task.wait(0.2)
+            Script.Temp.PauseAntiFling = false
+        end
+    end)
+
+    task.spawn(function()
+        repeat
+            if Script.GameState == "RedLightGreenLight" then
+                RefreshRLGLInjuredDropdown()
+            else
+                Options.RLGLInjuredPlayer:SetValues({})
+                Options.RLGLInjuredPlayer:SetValue(nil)
+            end
+            task.wait(3)
+        until Library.Unloaded
     end)
 
     local bringLoopThread = nil
@@ -2440,6 +2544,7 @@ local HideAndSeekGroup = Tabs.Main:AddRightGroupbox("Hide And Seeek", "search") 
                     if hiderRoot and myRoot then
                         if (myRoot.Position - hiderRoot.Position).Magnitude > 6 then
                             myChar:PivotTo(CFrame.new(hiderRoot.Position + Vector3.new(0, 0, 3)))
+                            Script.Functions.FireKnifeRemote(hider)
                             task.wait(0.2)
                         else
                             Script.Functions.FireKnifeRemote(hider)
@@ -2460,6 +2565,150 @@ local HideAndSeekGroup = Tabs.Main:AddRightGroupbox("Hide And Seeek", "search") 
             end)
         else
             Script.Temp.KillHidersActive = false
+        end
+    end)
+end
+
+local JumpRopeGroup = Tabs.Main:AddRightGroupbox("Jump Rope") do
+    JumpRopeGroup:AddToggle("AutoSurviveJumpRope", {
+        Text = "Anti Fall [beta]",
+        Default = false
+    }):OnChanged(function(enabled)
+        if enabled then
+            if not Script.Temp.JumpRope_AutoSurviveCon then
+                local char = lplr.Character
+                if char and workspace:FindFirstChild("JumpRope") and workspace.JumpRope:FindFirstChild("FallColllisionYClient") then
+                    local root = char:FindFirstChild("HumanoidRootPart")
+                    local fallY = workspace.JumpRope.FallColllisionYClient.Position.y
+                    pcall(function()
+                        workspace.JumpRope.FallColllisionYClient:Destory()
+                    end)
+                    Script.Temp.JumpRope_AutoSurviveCon = RunService.RenderStepped:Connect(function()
+                        if root and fallY and root.Position.Y <= fallY.Position.Y then
+                            root.CFrame = root.CFrame + Vector3.new(0, 5, 0)
+                        end
+                    end)
+                else
+                    Script.Functions.Alert("Game not running or Fall Detection is missing", 3)
+                    Toggles.AutoSurviveJumpRope:SetValue(false)
+                end
+            end
+        else
+            if Script.Temp.JumpRope_AutoSurviveCon then
+                Script.Temp.JumpRope_AutoSurviveCon:Disconnect()
+                Script.Temp.JumpRope_AutoSurviveCon = nil
+            end
+        end
+    end)
+
+    JumpRopeGroup:AddButton("Destroy Fall Detection [beta]", function()
+        local suc = pcall(function()
+            workspace.JumpRope.FallColllisionYClient:Destory()
+            workspace.JumpRope.FallColllisionY:Destroy()
+            workspace.JumpRope.COLLISIONCHECK:Destroy()
+        end)
+        if suc then
+            Script.Functions.Alert("Successfully destroyed fall detection!", 1.5)
+        else
+            Script.Functions.Alert("Fall detection part not found!", 3)
+        end
+    end)
+
+    JumpRopeGroup:AddButton("Complete Jump Rope Game", function() 
+        Script.Functions.WinJumpRope()
+        if not lplr.Character then return end
+        local a = lplr.Character:FindFirstChild("SafeJumpRope") or Instance.new("Folder")
+        a.Name = "SafeJumpRope"
+        a.Parent = lplr.Character
+    end)
+
+    JumpRopeGroup:AddToggle("AutoPerfectJumpRope", {
+        Text = "Auto Perfect [beta]",
+        Default = false
+    }):OnChanged(function(call)
+        if call then
+            if not Script.Temp.JumpRope_AutoPerfectCon then
+                Script.Temp.JumpRope_AutoPerfectCon = game:GetService("RunService").RenderStepped:Connect(function()
+                    local char = lplr.Character
+                    if char then
+                        local indicator = nil
+                        for _, obj in ipairs(char:GetDescendants()) do
+                            if obj:IsA("NumberValue") and obj.Name:lower():find("indicator") then
+                                indicator = obj
+                                break
+                            end
+                        end
+                        if indicator then
+                            indicator.Value = 0
+                        end
+                    end
+                end)
+            end
+        else
+            if Script.Temp.JumpRope_AutoPerfectCon then
+                Script.Temp.JumpRope_AutoPerfectCon:Disconnect()
+                Script.Temp.JumpRope_AutoPerfectCon = nil
+            end
+        end
+    end)
+end
+
+local CoordsGroup = Tabs.Other:AddLeftGroupbox("Coordinates", "compass") do
+    CoordsGroup:AddToggle("ShowCoordinates", {
+        Text = "Show Coordinates",
+        Default = false
+    }):OnChanged(function(call)
+        if call then
+            if not Script.Temp.CoordinatesGui then
+                local gui = Instance.new("ScreenGui")
+                gui.Name = "CoordinatesGUI_By3rfe"
+                gui.ResetOnSpawn = false
+                gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    
+                local label = Instance.new("TextLabel")
+                label.Name = "CoordinatesLabel"
+                label.Size = UDim2.new(0, 250, 0, 30)
+                label.Position = UDim2.new(0, 10, 0, 10)
+                label.BackgroundColor3 = Color3.new(0, 0, 0)
+                label.BackgroundTransparency = 0.4
+                label.TextColor3 = Color3.new(1, 1, 1)
+                label.TextSize = 16
+                label.Font = Enum.Font.SourceSans
+                label.TextXAlignment = Enum.TextXAlignment.Center
+                label.Parent = gui
+    
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0, 5)
+                corner.Parent = label
+    
+                Script.Temp.CoordinatesGui = gui
+                Script.Temp.CoordinatesLabel = label
+            end
+    
+            Script.Temp.CoordinatesGui.Enabled = true
+    
+            Script.Temp.CoordinatesConnection = RunService.RenderStepped:Connect(function()
+                local char = lplr.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    local root = char.HumanoidRootPart
+                    local x = math.floor(root.Position.X)
+                    local y = math.floor(root.Position.Y)
+                    local z = math.floor(root.Position.Z)
+                    Script.Temp.CoordinatesLabel.Text = "X: " .. x .. " | Y: " .. y .. " | Z: " .. z
+                else
+                    Script.Temp.CoordinatesLabel.Text = "Waiting for character..."
+                end
+            end)
+    
+        else
+            if Script.Temp.CoordinatesConnection then
+                Script.Temp.CoordinatesConnection:Disconnect()
+                Script.Temp.CoordinatesConnection = nil
+            end
+    
+            if Script.Temp.CoordinatesGui then
+                Script.Temp.CoordinatesGui.Enabled = false
+            end
         end
     end)
 end
@@ -2519,6 +2768,45 @@ local function isGuard(model)
         return not model:FindFirstChild("Dead") and hum.Health > 0
     end
     return false --[[or lower:find("guy") or lower:find("squid") --]]
+end
+
+local function mprint(tbl, indent, visited)
+    indent = indent or 0
+    visited = visited or {}
+
+    if visited[tbl] then
+        print(string.rep(" ", indent) .. "<Cyclic Reference>")
+        return
+    end
+    visited[tbl] = true
+
+    for key, value in pairs(tbl) do
+        local prefix = string.rep(" ", indent)
+        if type(value) == "table" then
+            print(prefix .. tostring(key) .. " = {")
+            mprint(value, indent + 4, visited)
+            print(prefix .. "}")
+        else
+            print(prefix .. tostring(key) .. " = " .. tostring(value))
+        end
+    end
+
+    local meta = getmetatable(tbl)
+    if meta then
+        print(string.rep(" ", indent) .. "Metatable:")
+        for key, value in pairs(meta) do
+            local prefix = string.rep(" ", indent + 4)
+            if type(value) == "function" then
+                print(prefix .. tostring(key) .. " = <function>")
+            elseif type(value) == "table" then
+                print(prefix .. tostring(key) .. " = {")
+                mprint(value, indent + 8, visited)
+                print(prefix .. "}")
+            else
+                print(prefix .. tostring(key) .. " = " .. tostring(value))
+            end
+        end
+    end
 end
 
 function Script.Functions.PivotRebelGuardsToPlayer()
@@ -2856,6 +3144,7 @@ local AutoShootGroup = Tabs.Main:AddRightGroupbox("Auto Shoot", "target") do
                             local root = character:FindFirstChild("HumanoidRootPart")
                             local target = getNearestGuard(root and root.Position or Vector3.zero, Toggles.AutoShootWallcheck.Value, character)
                             if target and (target.Position - root.Position).Magnitude < 100 then
+                                print("valid target", heldGun, target)
                                 local map = workspace:FindFirstChild("Map")
                                 local baseplate = map and map:FindFirstChild("Baseplate") or workspace
                                 local firePos = root.Position
@@ -3654,51 +3943,145 @@ function Script.Functions.FlingCharacterHook(call)
     end
 end
 
-local SecurityGroupBox = Tabs.Main:AddRightGroupbox("Security", "shield") do
-    SecurityGroupBox:AddToggle("PatchFlingAnticheat", {
-        Text = "Patch Anticheat",
-        Default = false
-    }):OnChanged(function(call)
-        --if shared.CheatEngineMode then
-            
-        --else
-            if call and not hookmetamethod then
-                Script.Functions.Alert("[Anticheat Patch]: Unsupported executor :(")
-            end
-            pcall(Script.Functions.SpoofFlingVelocity, call)
-            pcall(Script.Functions.FlingCharacterHook, call)
-        --end
-    end)
-    --[[SecurityGroupBox:AddToggle("PatchAnticheat", {
-        Text = "Patch Anticheat",
-        Default = false
-    }):OnChanged(function(call)
-        if call then
-            if not hookmetamethod then
-                Script.Functions.Alert("Your executor doesn't support this :(")
-                Toggles.PatchAnticheat:SetValue(false)
-                return
-            end
-            local AnticheatHook
-            AnticheatHook = hookmetamethod(game, "__namecall", function(self, ...)
-                local args = {...}
-                local method = getnamecallmethod()
-
-                if tostring(self) == "TemporaryReachedBindable" and method == "FireServer" then
-                    if args[1] ~= nil and type(args[1]) == "table" and (args[1].FallingPlayer ~= nil or args[1].funnydeath ~= nil) then
-                        return nil
-                    end
-                end
-                
-                return AnticheatHook(self, unpack(args))
-            end)
-            Script.Temp.AnticheatHook = AnticheatHook
+function Script.Functions.BlockAnticheatRemote(call)
+    if call then
+        if not hookmetamethod then
+            return
         else
-            if not hookmetamethod then return end
-            if not Script.Temp.AnticheatHook then return end
-            hookmetamethod(game, '__namecall', Script.Temp.AnticheatHook)
+            Script.Functions.Alert("Disabled Anticheat Remote", 3)
         end
-    end)--]]
+        local AnticheatHook
+        AnticheatHook = hookmetamethod(game, "__namecall", function(self, ...)
+            local args = {...}
+            local method = getnamecallmethod()
+
+            if tostring(self) == "TemporaryReachedBindable" and method == "FireServer" then
+                if args[1] ~= nil and type(args[1]) == "table" and (args[1].FallingPlayer ~= nil or args[1].funnydeath ~= nil) then
+                    return nil
+                end
+            end
+
+            if tostring(self) == "RandomOtherRemotes" and method == "FireServer" then
+                if args[1] ~= nil and type(args[1]) == "table" and args[1].FallenOffMap ~= nil then
+                    return nil
+                end
+            end
+            
+            return AnticheatHook(self, unpack(args))
+        end)
+        Script.Temp.AnticheatHook = AnticheatHook
+    else
+        if not hookmetamethod then return end
+        if not Script.Temp.AnticheatHook then return end
+        hookmetamethod(game, '__namecall', Script.Temp.AnticheatHook)
+    end
+end
+
+function Script.Functions.CEAnticheatPatch(call)
+    if call then
+        local humanoidRootPart = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+        local humanoid = lplr.Character and lplr.Character:FindFirstChild("Humanoid")
+        if not humanoidRootPart or not humanoid then 
+            Script.Functions.Alert("Error patching the anticheat! HumanoidRootPart or Humanoid not found!")
+            return
+        end
+        pcall(function()
+            workspace.Effects.SpawnLocation:Clone().Parent = workspace
+            workspace.Effects.SpawnLocation:Destroy()
+        end)
+        Script.Temp.HRPCON = humanoidRootPart:GetPropertyChangedSignal("Anchored"):Connect(function()
+            if humanoidRootPart.Anchored then
+                humanoidRootPart.Anchored = false
+            end
+        end)
+        local RunService = Services.RunService or game:GetService("RunService")
+        Script.Temp.ALVCON = RunService.Heartbeat:Connect(function()
+            local char = lplr.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChild("Humanoid")
+            if root and hum then
+                if root.AssemblyLinearVelocity == Vector3.new(0,0,0) and hum.MoveDirection.Magnitude > 0.1 then
+                    local speed = hum.WalkSpeed or 16
+                    local moveDirection = hum.MoveDirection
+                    root.AssemblyLinearVelocity = (moveDirection * speed) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+                end
+            end
+        end)
+    else
+        if Script.Temp.HRPCON then
+            pcall(function()
+                Script.Temp.HRPCON:Disconnect()
+            end)
+            Script.Temp.HRPCON = nil
+        end
+        if Script.Temp.ALVCON then
+            pcall(function()
+                Script.Temp.ALVCON:Disconnect()
+            end)
+            Script.Temp.ALVCON = nil
+        end
+    end
+end
+
+local AnticheatPatchGroup = Tabs.Main:AddRightGroupbox("Anticheat Patch", "shield") do
+    local Registry = {
+        FlingVelocity = {
+            Text = "Spoof Fling Velocity",
+            Function = Script.Functions.SpoofFlingVelocity,
+            Enabled = true,
+            Running = false
+        },
+        CharacterHook = {
+            Text = "Fling Character Hook",
+            Function = Script.Functions.FlingCharacterHook,
+            Enabled = true,
+            Running = false
+        },
+        AnticheatRemote = {
+            Text = "Block Anticheat Remote",
+            Function = Script.Functions.BlockAnticheatRemote,
+            Enabled = true,
+            Running = false
+        }
+    }
+    AnticheatPatchGroup:AddToggle("PatchFlingAnticheat", {
+        Text = "Enabled",
+        Default = false
+    }):OnChanged(function(call)
+        --[[if call and not hookmetamethod then
+            Script.Functions.Alert("[Anticheat Patch]: Unsupported executor :(")
+            return
+        end--]]
+        if hookmetamethod then
+            for _, reg in pairs(Registry) do
+                if call and reg.Enabled and not reg.Running then
+                    reg.Running = call
+                    reg.Function(call)
+                elseif not call and reg.Enabled and reg.Running then
+                    reg.Running = call
+                    reg.Function(call)
+                end 
+            end
+        else
+            Script.Functions.Alert("[Anticheat Patch]: Warning this anticheat bypass might not work properly \n due to your executor!", 3)
+            Script.Functions.CEAnticheatPatch(call)
+        end
+    end)
+    for metaName, reg in pairs(Registry) do
+        AnticheatPatchGroup:AddToggle(metaName, {
+            Text = reg.Text,
+            Default = reg.Enabled
+        }):OnChanged(function(call)
+            Registry[metaName].Enabled = call
+            if Registry[metaName].Running and not Registry[metaName].Enabled then
+                Registry[metaName].Function(call)
+                Registry[metaName].Running = call
+            end
+        end)
+    end
+end
+
+local SecurityGroupBox = Tabs.Main:AddRightGroupbox("Security", "shield") do
     SecurityGroupBox:AddToggle("AntiAfk", {
         Text = "Anti AFK",
         Default = true
@@ -3962,10 +4345,17 @@ pcall(function()
     Script.GameState = workspace.Values.CurrentGame.Value
 end)
 
+local function setNoclip(state)
+    if Toggles.Noclip.Value ~= state then
+        Toggles.Noclip:SetValue(state)
+    end
+end
+
 function Script.Functions.HandleAutowin()
     if lastCleanupFunction then
         pcall(lastCleanupFunction)
     end
+    setNoclip(false)
 
     pcall(function()
         Script.GameState = workspace.Values.CurrentGame.Value
@@ -4086,6 +4476,19 @@ States = {
         return function()
             Script.Functions.CheckPlayersVisibility()
         end
+    end,
+    JumpRope = function()
+        local call = true
+        task.spawn(function()
+            task.wait(15)
+            repeat
+                Script.Functions.WinJumpRope()
+                task.wait(3)
+            until not call or not Toggles.InkGameAutowin.Value or Library.Unloaded
+        end)
+        return function()
+            call = false
+        end
     end
 }
 
@@ -4144,10 +4547,7 @@ local Useful = Tabs.Other:AddRightGroupbox("Useful Stuff", "star") do
                 local PlayerGui = lplr:FindFirstChild("PlayerGui")
                 local DialogueFrameAnnouncement = PlayerGui and PlayerGui:FindFirstChild("DialogueGUI") and PlayerGui.DialogueGUI:FindFirstChild("DialogueFrameAnnouncement")
                 while Toggles.AutoSkipDialog.Value and not Library.Unloaded do
-                    if lplr:GetAttribute("_DialogueOpen") then
-                        Script.Functions.SkipDialogue()
-                    end
-                    if DialogueFrameAnnouncement and DialogueFrameAnnouncement.Visible then
+                    if lplr:GetAttribute("_DialogueOpen") or (DialogueFrameAnnouncement and DialogueFrameAnnouncement.Visible) then
                         Script.Functions.SkipDialogue()
                     end
                     task.wait(1)
@@ -4494,12 +4894,26 @@ Library:OnUnload(function()
             conn:Disconnect()
         end)
     end
+    for _, conn in pairs(Script.Temp) do
+        pcall(function()
+            if conn.Disconnect then
+                conn:Disconnect()
+            elseif conn.Destroy then
+                conn:Destroy()
+            else
+                conn:Disconnect()
+            end
+        end)
+    end
+    table.clear(Script.Temp)
+    table.clear(Script.Connections)
     for _, espType in pairs(Script.ESPTable) do
         for _, esp in pairs(espType) do
             pcall(esp.Destroy)
         end
     end
     pcall(Script.Functions.RevertAntiFlingDetection)
+    pcall(Script.Functions.TeleportBackFromSafe)
     pcall(Script.Functions.CleanAntiVoid)
     Library.Unloaded = true
     getgenv().voidware_loaded = false
