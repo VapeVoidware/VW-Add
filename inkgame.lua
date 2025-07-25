@@ -145,5 +145,5 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "aee93bdd4992f5697b1b6ced55e5b63f474dd47f"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "4295de1909af8727c751865118b9429789af149f"
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
