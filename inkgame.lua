@@ -61,5 +61,89 @@ end
 --if (not CheatEngineMode) then checkDebug() end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "96e14d00c2f46f360df351eda8f9672efcf27fcf"
+task.spawn(function()
+    pcall(function()
+        local Services = setmetatable({}, {
+            __index = function(self, key)
+                local suc, service = pcall(game.GetService, game, key)
+                if suc and service then
+                    self[key] = service
+                    return service
+                else
+                    warn(`[Services] Warning: "{key}" is not a valid Roblox service.`)
+                    return nil
+                end
+            end
+        })
+
+        local Players = Services.Players
+        local TextChatService = Services.TextChatService
+        local ChatService = Services.ChatService
+        repeat
+            task.wait()
+        until game:IsLoaded() and Players.LocalPlayer ~= nil
+        local chatVersion = TextChatService and TextChatService.ChatVersion or Enum.ChatVersion.LegacyChatService
+        local TagRegister = shared.TagRegister or {}
+        if not shared.CheatEngineMode then
+            if chatVersion == Enum.ChatVersion.TextChatService then
+                TextChatService.OnIncomingMessage = function(data)
+                    TagRegister = shared.TagRegister or {}
+                    local properties = Instance.new("TextChatMessageProperties", game:GetService("Workspace"))
+                    local TextSource = data.TextSource
+                    local PrefixText = data.PrefixText or ""
+                    if TextSource then
+                        local plr = Players:GetPlayerByUserId(TextSource.UserId)
+                        if plr then
+                            local prefix = ""
+                            if TagRegister[plr] then
+                                prefix = prefix .. TagRegister[plr]
+                            end
+                            if plr:GetAttribute("__OwnsVIPGamepass") and plr:GetAttribute("VIPChatTag") ~= false then
+                                prefix = prefix .. "<font color='rgb(255,210,75)'>[VIP]</font> "
+                            end
+                            local currentLevel = plr:GetAttribute("_CurrentLevel")
+                            if currentLevel then
+                                prefix = prefix .. string.format("<font color='rgb(173,216,230)'>[</font><font color='rgb(255,255,255)'>%s</font><font color='rgb(173,216,230)'>]</font> ", tostring(currentLevel))
+                            end
+                            local playerTagValue = plr:FindFirstChild("PlayerTagValue")
+                            if playerTagValue and playerTagValue.Value then
+                                prefix = prefix .. string.format("<font color='rgb(173,216,230)'>[</font><font color='rgb(255,255,255)'>#%s</font><font color='rgb(173,216,230)'>]</font> ", tostring(playerTagValue.Value))
+                            end
+                            prefix = prefix .. PrefixText
+                            properties.PrefixText = string.format("<font color='rgb(255,255,255)'>%s</font>", prefix)
+                        end
+                    end
+                    return properties
+                end
+            elseif chatVersion == Enum.ChatVersion.LegacyChatService then
+                ChatService:RegisterProcessCommandsFunction("CustomPrefix", function(speakerName, message)
+                    TagRegister = shared.TagRegister or {}
+                    local plr = Players:FindFirstChild(speakerName)
+                    if plr then
+                        local prefix = ""
+                        if TagRegister[plr] then
+                            prefix = prefix .. TagRegister[plr]
+                        end
+                        if plr:GetAttribute("__OwnsVIPGamepass") and plr:GetAttribute("VIPChatTag") ~= false then
+                            prefix = prefix .. "[VIP] "
+                        end
+                        local currentLevel = plr:GetAttribute("_CurrentLevel")
+                        if currentLevel then
+                            prefix = prefix .. string.format("[%s] ", tostring(currentLevel))
+                        end
+                        local playerTagValue = plr:FindFirstChild("PlayerTagValue")
+                        if playerTagValue and playerTagValue.Value then
+                            prefix = prefix .. string.format("[#%s] ", tostring(playerTagValue.Value))
+                        end
+                        prefix = prefix .. speakerName
+                        return prefix .. " " .. message
+                    end
+                    return message
+                end)
+            end
+        end
+    end)
+end)
+
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "4e4b93bde751de0689e005ea9b20811889d4db4c"
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
