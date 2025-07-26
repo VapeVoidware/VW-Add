@@ -1,3 +1,5 @@
+if not hookmetamethod then return end
+
 if shared.VW_HOOKMETAMETHOD_SCRIPT then
     pcall(function()
         shared.VW_HOOKMETAMETHOD_SCRIPT.Functions.CleanHooks()
