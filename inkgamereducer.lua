@@ -95,8 +95,11 @@ Script.hookmetamethod = setmetatable({
     __newindex = function(t, k, v) rawset(t, k, v) end
 })
 
+local SHOULD_WAIT_FOR_TOGGLES = true
+
 function Script.Functions.CleanHooks()
     debug_print("Cleaning all hooks and handlers")
+    SHOULD_WAIT_FOR_TOGGLES = false
     for hookType, tbl in pairs(Script.hookmetamethod) do
         if type(tbl) == "table" then
             for obj in pairs(tbl) do
@@ -126,7 +129,7 @@ repeat
     Toggles = getgenv().Toggles or getgenv().Linoria and getgenv().Linoria.Toggles
     task.wait(1)
     tries = tries + 1
-until tries > 15 or Toggles ~= nil
+until --[[tries > 15 or--]] Toggles ~= nil or not SHOULD_WAIT_FOR_TOGGLES
 
 if not Toggles then 
     debug_warn("Toggles didn't load in time! Aborting...")
