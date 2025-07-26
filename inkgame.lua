@@ -145,57 +145,13 @@ task.spawn(function()
     end)
 end)
 
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "9a35f00b4d3eb6bfb8e4bbd2e691457a4c3485ce"
+
 task.spawn(function()
     pcall(function()
         if not hookmetamethod then return end
-        if shared.OLD_HOOKMETAMETHOD_INDEX_SPOOF_FLING then
-            pcall(hookmetamethod, game, "__index", shared.OLD_HOOKMETAMETHOD_INDEX_SPOOF_FLING)
-            shared.OLD_HOOKMETAMETHOD_INDEX_SPOOF_FLING = nil
-        end
-        if shared.CHARACTER_ADDED_CONN then
-            pcall(function()
-                shared.CHARACTER_ADDED_CONN:Disconnect()
-            end)
-            shared.CHARACTER_ADDED_CONN = nil
-        end
-        local spoofedValue = Vector3.new(0, 0, 0)
-        local lplr = game:GetService("Players").LocalPlayer
-
-        local root = lplr.Character and lplr.Character:WaitForChild("HumanoidRootPart")
-        shared.CHARACTER_ADDED_CONN = lplr.CharacterAdded:Connect(function()
-            root = lplr.Character:WaitForChild("HumanoidRootPart")
-        end)
-
-        local spoofedProps = {
-            Velocity = spoofedValue,
-            AssemblyLinearVelocity = spoofedValue
-        }
-
-        local index
-        shared.OLD_HOOKMETAMETHOD_INDEX_SPOOF_FLING = index
-
-        index = hookmetamethod(game, "__index", function(self, key, ...)
-            local args = {...}
-            if not shared.SPOOF_FLING_VELOCITY then
-                return index(self, key, unpack(args))
-            end
-            if not root then
-                return index(self, key, unpack(args))
-            end
-            if not checkcaller() and typeof(self) == "Instance" and self == root then
-                if spoofedProps[key] ~= nil then
-                    return spoofedProps[key]
-                end
-            end
-            if not checkcaller() and typeof(self) == "Instance" and self == hum then
-                if spoofedProps[key] ~= nil then
-                    return spoofedProps[key]
-                end
-            end
-            return index(self, key, unpack(args))
-        end)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "76f06d08f5eed3d6d942166c19747e939e6f7fd1"
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
