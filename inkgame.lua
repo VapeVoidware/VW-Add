@@ -145,7 +145,7 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "9a35f00b4d3eb6bfb8e4bbd2e691457a4c3485ce"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "eda5408280ca460f2b5369c42bd0782506e2a247"
 
 task.spawn(function()
     pcall(function()
