@@ -145,25 +145,6 @@ task.spawn(function()
     end)
 end)
 
-task.spawn(function()
-    pcall(function()
-        local ReplicatedFirst = game:GetService("ReplicatedFirst")
-
-        if not hookmetamethod then return end
-        local old
-        old = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if tostring(self) == "Miau" and method == "FireServer" then
-                return true
-            end
-            return old(self, ...)
-        end)
-        getgenv().hookmetamethod = nil
-
-        ReplicatedFirst:FindFirstChild("Preloading").Disabled = true
-    end)
-end)
-
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 
 local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
