@@ -156,7 +156,7 @@ task.spawn(function()
             if tostring(self) == "Miau" and method == "FireServer" then
                 return true
             end
-            return oldFireServer(self, ...)
+            return old(self, ...)
         end)
         getgenv().hookmetamethod = nil
 
