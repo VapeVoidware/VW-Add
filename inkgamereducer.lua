@@ -194,6 +194,9 @@ Script.HooksData.CoreNamecallHook = function(self, ...)
                 return nil
             end
         end
+        if tostring(self) == "Miau" and method == "FireServer" then
+            return nil
+        end
     end
     return Script.hookmetamethod.APPROVED_CONSTANT
 end
