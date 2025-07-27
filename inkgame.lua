@@ -149,12 +149,12 @@ end)
 
 local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
 
---[[task.spawn(function()
+task.spawn(function()
     pcall(function()
         if not hookmetamethod then return end
         loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
     end)
-end)--]]
+end)
 
 if hookmetamethod ~= nil then
     pcall(function()
