@@ -156,6 +156,13 @@ task.spawn(function()
     end)
 end)
 
+task.spawn(function()
+    pcall(function()
+        if hookmetamethod then return end
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgameanticheatpatch.lua", true))()
+    end)
+end)
+
 if hookmetamethod ~= nil then
     pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgameanticheat.lua", true))()
