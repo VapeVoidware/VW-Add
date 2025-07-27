@@ -145,7 +145,9 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "eda5408280ca460f2b5369c42bd0782506e2a247"
+game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
+
+--[[local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "eda5408280ca460f2b5369c42bd0782506e2a247"
 
 task.spawn(function()
     pcall(function()
@@ -154,4 +156,4 @@ task.spawn(function()
     end)
 end)
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()--]]
