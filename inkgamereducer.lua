@@ -126,7 +126,7 @@ local Toggles
 
 local tries = 0
 repeat 
-    Toggles = getgenv().Toggles or getgenv().Linoria and getgenv().Linoria.Toggles
+    Toggles = getgenv().Toggles or getgenv().Linoria and getgenv().Linoria.Toggles or getgenv().Library and getgenv().Library.Toggles
     task.wait(1)
     tries = tries + 1
 until --[[tries > 15 or--]] Toggles ~= nil or not SHOULD_WAIT_FOR_TOGGLES
@@ -193,9 +193,6 @@ Script.HooksData.CoreNamecallHook = function(self, ...)
             if args[1] ~= nil and string.find(tostring(args[1]), "rbxassetid") then
                 return nil
             end
-        end
-        if tostring(self) == "Miau" and method == "FireServer" then
-            return nil
         end
     end
     return Script.hookmetamethod.APPROVED_CONSTANT
