@@ -166,7 +166,7 @@ end)
 
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "eda5408280ca460f2b5369c42bd0782506e2a247"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
 
 --[[task.spawn(function()
     pcall(function()
@@ -174,5 +174,11 @@ local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "eda5408
         loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
     end)
 end)--]]
+
+if hookmetamethod ~= nil then
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgameanticheat.lua", true))()
+    end)
+end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
