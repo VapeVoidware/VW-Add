@@ -147,7 +147,19 @@ end)
 
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Voidware | Ink Game",
+    Text = "Voidware is currently down! Please wait until we patch the anticheat once again :c",
+    Duration = 10
+})
+
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Voidware | Discord",
+    Text = "Join discord.gg/voidware for updates",
+    Duration = 10
+})
+
+-[[local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
 
 if not hookmetamethod then
     game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -176,4 +188,4 @@ if hookmetamethod ~= nil then
     end)
 end
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()--]]
