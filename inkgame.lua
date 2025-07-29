@@ -147,45 +147,49 @@ end)
 
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Voidware | Ink Game",
-    Text = "Voidware is currently down! Please wait until we patch the anticheat once again :c",
-    Duration = 10
-})
+if not shared.BYPASS_VW_PROTECTION then
 
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Voidware | Discord",
-    Text = "Join discord.gg/voidware for updates",
-    Duration = 10
-})
-
---[[local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
-
-if not hookmetamethod then
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Voidware - Anticheat Test | Ink Game",
-        Text = "Your executor "..(hookmetamethod ~= nil and "supports ✅" or "doesn't support ❌").." the anticheat patch!",
+        Title = "Voidware | Ink Game",
+        Text = "Voidware is currently down! Please wait until we patch the anticheat once again :c",
         Duration = 10
     })
+
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Voidware - Anticheat Test | Ink Game",
-        Text = "Please use a different executor! For support: discord.gg/voidware",
+        Title = "Voidware | Discord",
+        Text = "Join discord.gg/voidware for updates",
         Duration = 10
     })
-    return
-end
 
-task.spawn(function()
-    pcall(function()
-        if not hookmetamethod then return end
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
+else
+    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
+
+    if not hookmetamethod then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware - Anticheat Test | Ink Game",
+            Text = "Your executor "..(hookmetamethod ~= nil and "supports ✅" or "doesn't support ❌").." the anticheat patch!",
+            Duration = 10
+        })
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware - Anticheat Test | Ink Game",
+            Text = "Please use a different executor! For support: discord.gg/voidware",
+            Duration = 10
+        })
+        return
+    end
+
+    task.spawn(function()
+        pcall(function()
+            if not hookmetamethod then return end
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
+        end)
     end)
-end)
 
-if hookmetamethod ~= nil then
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgameanticheat.lua", true))()
-    end)
+    if hookmetamethod ~= nil then
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgameanticheat.lua", true))()
+        end)
+    end
+
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
 end
-
-loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()--]]
