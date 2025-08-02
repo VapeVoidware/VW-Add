@@ -33,6 +33,11 @@ local function checkExecutor()
                     end)
                 end
             end
+            if string.find(string.lower(tostring(res)), "delta") then
+                getgenv().isnetworkowner = function()
+                    return true
+                end
+            end
         end
     end
 end
