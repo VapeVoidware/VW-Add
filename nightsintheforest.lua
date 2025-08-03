@@ -150,6 +150,6 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "cda73d68cdb3dff8d5d636dd5f127f96454d1b54"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "948be0e94ca8a44829a5c7d789b586b3d532cf04"
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newnightsintheforest.lua", true))()
