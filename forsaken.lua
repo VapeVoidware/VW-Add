@@ -149,7 +149,6 @@ task.spawn(function()
         end
     end)
 end)
-if not shared.TestingMode then return end
 
 local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "da0aeb15a18d3c8091ff1e3aab25970f40f53465"
 
