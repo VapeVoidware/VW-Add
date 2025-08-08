@@ -146,9 +146,9 @@ end)
 
 Script.HooksData = {}
 Script.HooksData.CoreIndexHook = function(self, key)
-    if not shared.SPOOF_FLING_VELOCITY then
+    --[[if not shared.SPOOF_FLING_VELOCITY then
         return Script.hookmetamethod.APPROVED_CONSTANT
-    end
+    end--]]
     if not root then
         return Script.hookmetamethod.APPROVED_CONSTANT
     end
@@ -156,47 +156,12 @@ Script.HooksData.CoreIndexHook = function(self, key)
         if spoofedProps[key] ~= nil then
             return spoofedProps[key]
         end
-    end
-    return Script.hookmetamethod.APPROVED_CONSTANT
-end
-Script.HooksData.CoreNamecallHook = function(self, ...)
-    local method = getnamecallmethod and getnamecallmethod() or nil
-    local args = {...}
-    if type(Toggles) ~= "table" then
-        Toggles = {}
-    end
-    if tostring(self) == "rootCFrame" and method == "FireServer" and Script.GameState == "RedLightGreenLight" then
-        if Toggles and Toggles.RedLightGodmode and Toggles.RedLightGodmode.Value and shared.RLGLIsGreenLight == false and shared.RLGLLastRootPartCFrame then
-            args[1] = shared.RLGLLastRootPartCFrame
-            return args
-        end
-    end
-    if Toggles and Toggles.ImmuneDalgonaGame and Toggles.ImmuneDalgonaGame.Value then
-        if tostring(self) == "DALGONATEMPREMPTE" and method == "FireServer" then
-            if args[1] ~= nil and type(args[1]) == "table" and args[1].CrackAmount ~= nil then
-                return nil
-            end
-        end
-    end
-    if Toggles and Toggles.PatchFlingAnticheat and Toggles.PatchFlingAnticheat.Value then
-        if tostring(self) == "TemporaryReachedBindable" and method == "FireServer" then
-            if args[1] ~= nil and type(args[1]) == "table" and (args[1].FallingPlayer ~= nil or args[1].funnydeath ~= nil) then
-                return nil
-            end
-        end
-        if tostring(self) == "RandomOtherRemotes" and method == "FireServer" then
-            if args[1] ~= nil and type(args[1]) == "table" and args[1].FallenOffMap ~= nil then
-                return nil
-            end
-        end
-        if tostring(self) == "UsePowerSpin" and method == "FireServer" then
-            if args[1] ~= nil and string.find(tostring(args[1]), "rbxassetid") then
-                return nil
-            end
+        if key == "Position" and Toggles and Toggles.RedLightGodmode and Toggles.RedLightGodmode.Value and shared.RLGLIsGreenLight == false and shared.RLGLLastRootPartCFrame then
+            return shared.RLGLLastRootPartCFrame
         end
     end
     return Script.hookmetamethod.APPROVED_CONSTANT
 end
 
 Script.hookmetamethod.__index.CoreIndexHook = Script.HooksData.CoreIndexHook
-Script.hookmetamethod.__namecall.CoreNamecallHook = Script.HooksData.CoreNamecallHook
+
