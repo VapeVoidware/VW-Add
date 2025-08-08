@@ -222,6 +222,14 @@ else
         return
     end--]]
 
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware | Announcment",
+            Text = "Warning: Rebelling with Voidware may lead to bans. Don't join Rebels and start a new game when one starts. Sorry for the inconvenience!",
+            Duration = 8
+        })
+    end)
+
     task.spawn(function()
         pcall(function()
             if not hookmetamethod then return end
