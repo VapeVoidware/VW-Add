@@ -181,11 +181,19 @@ else
     end
 
     if (shared.CheatEngineMode or not verified) and not shared.AcceptedRisksOfBan then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Voidware | Ink Game",
-            Text = "Warning! Your executor might not support all functions needed to patch the anticheat!",
-            Duration = 10
-        })
+        if not shared.CheatEngineMode and not verified then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Voidware | Ink Game",
+                Text = "Warning! Your executor hasn't been tested yet if it will be able to patch the anticheat!",
+                Duration = 10
+            })
+        else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Voidware | Ink Game",
+                Text = "Warning! Your executor might not support all functions needed to patch the anticheat!",
+                Duration = 10
+            })
+        end
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game",
             Text = "If you understand the risk of getting banned by using your executor, execute the script again.",
