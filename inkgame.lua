@@ -164,7 +164,7 @@ if not shared.BYPASS_VW_PROTECTION then
 else
     local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
 
-    if not hookmetamethod then
+    --[[if not hookmetamethod then
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware - Anticheat Test | Ink Game",
             Text = "Your executor "..(hookmetamethod ~= nil and "supports ✅" or "doesn't support ❌").." the anticheat patch!",
@@ -176,7 +176,7 @@ else
             Duration = 10
         })
         return
-    end
+    end--]]
 
     task.spawn(function()
         pcall(function()
