@@ -165,7 +165,22 @@ if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
 else
     local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "7dd58d38c3cf70c8f2d55e3c94d49c113ccb7111"
 
-    if shared.CheatEngineMode and not shared.AcceptedRisksOfBan then
+    local verified_executors = {"delta", "bunni", "hydrogen"}
+    local suc, current_executor = pcall(function()
+        return string.lower(tostring(identifyexecutor()))
+    end)
+    if not suc then shared.CheatEngineMode = true end
+    local verified = false
+    if not shared.CheatEngineMode then
+        for _, v in pairs(verified_executors) do
+            if string.find(current_executor, v) then
+                verified = true
+                break
+            end
+        end
+    end
+
+    if (shared.CheatEngineMode or not verified) and not shared.AcceptedRisksOfBan then
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game",
             Text = "Warning! Your executor might not support all functions needed to patch the anticheat!",
