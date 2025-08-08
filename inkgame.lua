@@ -184,7 +184,7 @@ else
         if not shared.CheatEngineMode and not verified then
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Voidware | Ink Game",
-                Text = "Warning! Your executor hasn't been tested yet if it will be able to patch the anticheat!",
+                Text = "Warning! Your executor hasn't been tested yet if it's going to be able to bypass the anticheat!",
                 Duration = 10
             })
             game:GetService("StarterGui"):SetCore("SendNotification", {
