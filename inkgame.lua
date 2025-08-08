@@ -187,6 +187,11 @@ else
                 Text = "Warning! Your executor hasn't been tested yet if it will be able to patch the anticheat!",
                 Duration = 10
             })
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Voidware | Currently Tested Executors",
+                Text = "The following executors have been tested as fully working: " .. table.concat(verified_executors, ", "),
+                Duration = 10
+            })
         else
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Voidware | Ink Game",
