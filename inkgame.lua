@@ -222,13 +222,13 @@ else
         return
     end--]]
 
-    pcall(function()
+    --[[pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Announcment",
             Text = "Warning: Rebelling with Voidware may lead to bans. Don't join Rebels and start a new game when one starts. Sorry for the inconvenience! We are working on it",
             Duration = 8
         })
-    end)
+    end)--]]
 
     task.spawn(function()
         pcall(function()
