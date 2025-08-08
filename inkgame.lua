@@ -185,11 +185,5 @@ else
         end)
     end)
 
-    if hookmetamethod ~= nil then
-        pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgameanticheat.lua", true))()
-        end)
-    end
-
     loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newinkgame.lua", true))()
 end
