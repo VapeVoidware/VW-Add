@@ -146,8 +146,9 @@ task.spawn(function()
 end)
 
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
+local IS_DOWN = false
 
-if not shared.BYPASS_VW_PROTECTION then
+if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
 
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Voidware | Ink Game",
@@ -162,7 +163,22 @@ if not shared.BYPASS_VW_PROTECTION then
     })
 
 else
-    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "a0ee252578ebb5651f11ebf82dc52dcb8e14eadb"
+    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "7dd58d38c3cf70c8f2d55e3c94d49c113ccb7111"
+
+    if shared.CheatEngineMode and not shared.AcceptedRisksOfBan then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware | Ink Game",
+            Text = "Warning! Your executor might not support all functions needed to patch the anticheat!",
+            Duration = 10
+        })
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware | Ink Game",
+            Text = "If you understand the risk of getting banned by using your executor, execute the script again.",
+            Duration = 10
+        })
+        shared.AcceptedRisksOfBan = true
+        return
+    end
 
     --[[if not hookmetamethod then
         game:GetService("StarterGui"):SetCore("SendNotification", {
