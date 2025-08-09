@@ -165,7 +165,7 @@ if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
 else
     local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "6f705b948e00be6c4b2e0dbac9862e073b154de7"
 
-    local verified_executors = {"delta", "bunni", "hydrogen", "jjs", "velocity", "krnl"}
+    local verified_executors = {}
     local suc, current_executor = pcall(function()
         return string.lower(tostring(identifyexecutor()))
     end)
@@ -179,6 +179,14 @@ else
             end
         end
     end
+
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware | Ink Game | Announcment",
+            Text = "Warning! After Ink Game updates voidware might become detected so be careful until we fully verify that vw works!",
+            Duration = 10
+        })
+    end)
 
     if (shared.CheatEngineMode or not verified) and not shared.AcceptedRisksOfBan then
         if not shared.CheatEngineMode and not verified then
@@ -207,14 +215,6 @@ else
         shared.AcceptedRisksOfBan = true
         return
     end
-
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Voidware | Ink Game | Announcment",
-            Text = "Warning! After Ink Game updates voidware might become detected so be careful until we fully verify that vw works!",
-            Duration = 10
-        })
-    end)
 
     --[[if not hookmetamethod then
         game:GetService("StarterGui"):SetCore("SendNotification", {
