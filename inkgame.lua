@@ -61,7 +61,7 @@ end
 --if (not CheatEngineMode) then checkDebug() end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
 
-task.spawn(function()
+--[[task.spawn(function()
     pcall(function()
         local Services = setmetatable({}, {
             __index = function(self, key)
@@ -143,7 +143,7 @@ task.spawn(function()
             end
         end
     end)
-end)
+end)--]]
 
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 local IS_DOWN = true
