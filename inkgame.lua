@@ -208,6 +208,14 @@ else
         return
     end
 
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware | Ink Game | Announcment",
+            Text = "Warning! After Ink Game updates voidware might become detected so be careful until we fully verify that vw works!",
+            Duration = 10
+        })
+    end)
+
     --[[if not hookmetamethod then
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware - Anticheat Test | Ink Game",
