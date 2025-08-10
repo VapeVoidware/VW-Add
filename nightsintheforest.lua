@@ -66,6 +66,17 @@ end
 --if (not CheatEngineMode) then checkDebug() end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
 
+if game.PlaceId == 79546208627805 then
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware | 99 Nights In The Forest",
+            Text = "Go In Game for Voidware to load :D",
+            Duration = 10
+        })
+    end)
+    return
+end 
+
 task.spawn(function()
     pcall(function()
         local Services = setmetatable({}, {
