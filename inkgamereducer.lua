@@ -156,8 +156,12 @@ Script.HooksData.CoreIndexHook = function(self, key)
         if spoofedProps[key] ~= nil then
             return spoofedProps[key]
         end
-        if key == "Position" and Toggles and Toggles.RedLightGodmode and Toggles.RedLightGodmode.Value and shared.RLGLIsGreenLight == false and shared.RLGLLastRootPartCFrame then
-            return shared.RLGLLastRootPartCFrame
+        if key == "Position" then
+            if Toggles and Toggles.RedLightGodmode and Toggles.RedLightGodmode.Value and shared.RLGLIsGreenLight == false and shared.RLGLLastRootPartCFrame then
+                return shared.RLGLLastRootPartCFrame
+            elseif shared.DISABLE_FALL_DETECTION_SKY_GAMES then
+                -- nil
+            end
         end
     end
     return Script.hookmetamethod.APPROVED_CONSTANT
