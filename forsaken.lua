@@ -150,6 +150,6 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "da0aeb15a18d3c8091ff1e3aab25970f40f53465"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "da0aeb15a18d3c8091ff1e3aab25970f40f53465"
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newforsaken.lua", true))()
