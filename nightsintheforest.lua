@@ -70,7 +70,7 @@ if game.PlaceId == 79546208627805 then
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | 99 Nights In The Forest",
-            Text = "Go In Game for Voidware to load :D",
+            Text = "Go In Game for Voidware to load :D [You are in lobby currently]",
             Duration = 10
         })
     end)
