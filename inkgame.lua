@@ -207,13 +207,13 @@ else
                 Duration = 10
             })
         end
-        game:GetService("StarterGui"):SetCore("SendNotification", {
+        --[[game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game",
             Text = "If you understand the risk of getting banned by using your executor, execute the script again.",
             Duration = 10
-        })
+        })--]]
         shared.AcceptedRisksOfBan = true
-        return
+        --return
     end
 
     --[[if not hookmetamethod then
