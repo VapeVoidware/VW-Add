@@ -180,13 +180,13 @@ else
         end
     end
 
-    pcall(function()
+    --[[pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game | Announcment",
             Text = "Warning! After Ink Game updates voidware might become detected so be careful until we fully verify that vw works!",
             Duration = 10
         })
-    end)
+    end)--]]
 
     if (shared.CheatEngineMode or not verified) and not shared.AcceptedRisksOfBan then
         if not shared.CheatEngineMode and not verified then
