@@ -182,7 +182,7 @@ if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
     })
 
 else
-    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "65049a135fe66a8cf705fe537dc8b9982e642e71"
+    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "cfa900b7f1639ea5398c9ca11e552f1d214e8577"
 
     local verified_executors = {"jjs", "valex", "hydrogen", "delta", "solara", "krnl"}
     local suc, current_executor = pcall(function()
