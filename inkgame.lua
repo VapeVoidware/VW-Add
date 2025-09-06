@@ -1,3 +1,22 @@
+--[[
+██╗   ██╗ ██████╗ ██╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗
+██║   ██║██╔═══██╗██║██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝
+██║   ██║██║   ██║██║██║  ██║██║ █╗ ██║███████║██████╔╝█████╗  
+╚██╗ ██╔╝██║   ██║██║██║  ██║██║███╗██║██╔══██║██╔═══╝ ██╔══╝  
+ ╚████╔╝ ╚██████╔╝██║██████╔╝╚███╔███╔╝██║  ██║██║     ███████╗
+  ╚═══╝   ╚═════╝ ╚═╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝     ╚══════╝
+
+                🚀 VOIDWARE — Ink Game 🚀
+----------------------------------------------------------------------------
+  IMPORTANT:
+  You must copy and use the FULL script below. Do NOT press on the link.:
+
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+
+----------------------------------------------------------------------------
+  For support head over to discord.gg/voidware
+----------------------------------------------------------------------------
+]]
 if not game:IsLoaded() then return end
 local CheatEngineMode = false
 if (not getgenv) or (getgenv and type(getgenv) ~= "function") then CheatEngineMode = true end
@@ -163,9 +182,9 @@ if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
     })
 
 else
-    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or "6f705b948e00be6c4b2e0dbac9862e073b154de7"
+    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "65049a135fe66a8cf705fe537dc8b9982e642e71"
 
-    local verified_executors = {"jjs", "valex", "hydrogen", "delta", "solara"}
+    local verified_executors = {"jjs", "valex", "hydrogen", "delta", "solara", "krnl"}
     local suc, current_executor = pcall(function()
         return string.lower(tostring(identifyexecutor()))
     end)
@@ -180,13 +199,13 @@ else
         end
     end
 
-    pcall(function()
+    --[[pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game | Announcment",
             Text = "Warning! After Ink Game updates voidware might become detected so be careful until we fully verify that vw works!",
             Duration = 10
         })
-    end)
+    end)--]]
 
     if (shared.CheatEngineMode or not verified) and not shared.AcceptedRisksOfBan then
         if not shared.CheatEngineMode and not verified then
@@ -207,13 +226,13 @@ else
                 Duration = 10
             })
         end
-        game:GetService("StarterGui"):SetCore("SendNotification", {
+        --[[game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game",
             Text = "If you understand the risk of getting banned by using your executor, execute the script again.",
             Duration = 10
-        })
+        })--]]
         shared.AcceptedRisksOfBan = true
-        return
+        --return
     end
 
     --[[if not hookmetamethod then
