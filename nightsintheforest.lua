@@ -84,6 +84,7 @@ local function checkDebug()
 end
 --if (not CheatEngineMode) then checkDebug() end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
+shared.ForcePlayerGui = true
 
 if game.PlaceId == 79546208627805 then
     pcall(function()
@@ -180,6 +181,6 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "7b3fad2b46336a55beca73caa205fb49dac41165"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "c907a8295552423e242e73a1f7ee468273fb035a"
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newnightsintheforest.lua", true))()
