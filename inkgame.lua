@@ -165,7 +165,7 @@ shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
 end)--]]
 
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
-local IS_DOWN = false
+local IS_DOWN = true
 
 if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
 
