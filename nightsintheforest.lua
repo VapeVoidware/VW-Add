@@ -121,7 +121,7 @@ task.spawn(function()
         local chatVersion = TextChatService and TextChatService.ChatVersion or Enum.ChatVersion.LegacyChatService
         local TagRegister = shared.TagRegister or {}
         if not shared.CheatEngineMode then
-            if chatVersion == Enum.ChatVersion.TextChatService then
+            --if chatVersion == Enum.ChatVersion.TextChatService then
                 TextChatService.OnIncomingMessage = function(data)
                     TagRegister = shared.TagRegister or {}
                     local properties = Instance.new("TextChatMessageProperties", game:GetService("Workspace"))
@@ -151,7 +151,7 @@ task.spawn(function()
                     end
                     return properties
                 end
-            elseif chatVersion == Enum.ChatVersion.LegacyChatService then
+            --[[elseif chatVersion == Enum.ChatVersion.LegacyChatService then
                 ChatService:RegisterProcessCommandsFunction("CustomPrefix", function(speakerName, message)
                     TagRegister = shared.TagRegister or {}
                     local plr = Players:FindFirstChild(speakerName)
@@ -176,11 +176,11 @@ task.spawn(function()
                     end
                     return message
                 end)
-            end
+            end--]]
         end
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "3b3b6b58e840cad9ae32a59b77c15d89218c6147"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "35ead6360a229d785bb5c2644a694b495f2cd58f"
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newnightsintheforest.lua", true))()
