@@ -167,7 +167,7 @@ end)--]]
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 local IS_DOWN = true
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "d7241b488f13d5805fc091ce39901a15ad4345f6"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "8510fad74659f98b4d35cb68d9ee0f73e9a8a8ee"
 shared.CustomCommit = commit
 
 if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
@@ -176,6 +176,7 @@ if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
     RESULT_HANDLER.OnInvoke = function(text : string)
         if text ~= "Execute Public Beta Version" then return end
         shared.BYPASS_VW_PROTECTION = true
+        shared.VW_PUBLIC_TESTING_MODE = true
         loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
     end
     game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -286,6 +287,20 @@ else
             Duration = 8
         })
     end)--]]
+
+    if shared.VW_PUBLIC_TESTING_MODE then
+        local RESULT_HANDLER = Instance.new("BindableFunction")
+        RESULT_HANDLER.OnInvoke = function(text : string)
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/something.lua", true))()
+        end
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware Public Testing",
+            Text = "Make sure to report any bugs in discord.gg/voidware!",
+            Button1 = "Copy Discord Link",
+            Duration = 15,
+            Callback = RESULT_HANDLER
+        })
+    end
 
     task.spawn(function()
         pcall(function()
