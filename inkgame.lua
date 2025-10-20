@@ -167,7 +167,7 @@ end)--]]
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 local IS_DOWN = true
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "8510fad74659f98b4d35cb68d9ee0f73e9a8a8ee"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "fd1ee7a200c379a7d01a9656eb9b91fd3f22bdfb"
 shared.CustomCommit = commit
 
 if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
