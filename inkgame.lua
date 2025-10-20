@@ -167,9 +167,27 @@ end)--]]
 --game:GetService("Players").LocalPlayer:Kick("Voidware Is Temporarily Down. Please wait while we bring it back discord.gg/voidware :c")
 local IS_DOWN = true
 
-if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "bd0e67a9c9e0d5956a71fd32b89ab54efaf55e22"
+shared.CustomCommit = commit
 
+if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
+    
+    local RESULT_HANDLER = Instance.new("BindableFunction")
+    RESULT_HANDLER.OnInvoke = function(text : string)
+        if text ~= "Execute Public Beta Version" then return end
+        shared.BYPASS_VW_PROTECTION = true
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+    end
     game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Voidware Public Testing",
+        Text = "Voidware is currently down, but you can try the public beta version before it officially gets released :D",
+        Button1 = "Execute Public Beta Version",
+        Button2 = "Nevermind",
+        Duration = 15,
+        Callback = RESULT_HANDLER
+    })
+
+    --[[game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Voidware | Ink Game",
         Text = "Voidware is currently down! Please wait until we patch the anticheat once again :c",
         Duration = 10
@@ -179,11 +197,9 @@ if IS_DOWN and not shared.BYPASS_VW_PROTECTION then
         Title = "Voidware | Discord",
         Text = "Join discord.gg/voidware for updates",
         Duration = 10
-    })
+    })--]]
 
 else
-    local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "0f3445958b07a5f7eabe98c1dd1f378ac227dd31"
-
     local verified_executors = {"jjs", "valex", "hydrogen", "delta", "solara", "krnl"}
     local suc, current_executor = pcall(function()
         return string.lower(tostring(identifyexecutor()))
@@ -208,7 +224,21 @@ else
     end)--]]
 
     if (shared.CheatEngineMode or not verified) and not shared.AcceptedRisksOfBan then
-        if not shared.CheatEngineMode and not verified then
+        local RESULT_HANDLER = Instance.new("BindableFunction")
+        RESULT_HANDLER.OnInvoke = function(text : string)
+            if text ~= "Execute Public Beta Version" then return end
+            shared.AcceptedRisksOfBan = true
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+        end
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Executor Status",
+            Text = "Warning! Your executor hasn't been tested yet if it's going to be able to bypass the anticheat!",
+            Button1 = "Execute Anyway",
+            Button2 = "Nevermind",
+            Duration = 15,
+            Callback = RESULT_HANDLER
+        })
+        --[[if not shared.CheatEngineMode and not verified then
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Voidware | Ink Game",
                 Text = "Warning! Your executor hasn't been tested yet if it's going to be able to bypass the anticheat!",
@@ -225,13 +255,13 @@ else
                 Text = "Warning! Your executor might not support all functions needed to patch the anticheat!",
                 Duration = 10
             })
-        end
+        end--]]
         --[[game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Voidware | Ink Game",
             Text = "If you understand the risk of getting banned by using your executor, execute the script again.",
             Duration = 10
         })--]]
-        shared.AcceptedRisksOfBan = true
+        --shared.AcceptedRisksOfBan = true
         --return
     end
 
