@@ -305,7 +305,7 @@ else
     task.spawn(function()
         pcall(function()
             if not hookmetamethod then return end
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
+            --loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/inkgamereducer.lua", true))()
         end)
     end)
 
