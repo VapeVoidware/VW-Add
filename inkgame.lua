@@ -79,6 +79,7 @@ local function checkDebug()
 end
 --if (not CheatEngineMode) then checkDebug() end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
+if shared.CheatEngineMode then shared.CLONEREF_BACKUP_MODE = true end
 
 --[[task.spawn(function()
     pcall(function()
