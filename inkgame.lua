@@ -255,6 +255,7 @@ else
         RESULT_HANDLER.OnInvoke = function(text : string)
             if text ~= "Execute Public Beta Version" then return end
             shared.AcceptedRisksOfBan = true
+            shared.TestingMode = true
             loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
         end
         game:GetService("StarterGui"):SetCore("SendNotification", {
