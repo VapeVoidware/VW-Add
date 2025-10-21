@@ -78,8 +78,33 @@ local function checkDebug()
     end
 end
 --if (not CheatEngineMode) then checkDebug() end
+local CLONEREF_RESULT = shared.CLONEREF_BACKUP_MODE
+local function checkCloneFunctions()
+    if CLONEREF_RESULT then return end
+    if not (cloneref ~= nil and type(cloneref) == "function") then
+        CLONEREF_RESULT = true
+    end
+    if CLONEREF_RESULT then return end
+    local testFunc = function() end
+    if clonefunction ~= nil and type(clonefunction) == "function" then
+        local res1 = tostring(testFunc)
+        local suc, res2 = pcall(function()
+            return clonefunction(testFunc)
+        end)
+        if not suc or res1 == tostring(res2) then
+            CLONEREF_RESULT = true
+        end
+    else
+        CLONEREF_RESULT = true
+    end
+end
+if not CheatEngineMode then pcall(checkCloneFunctions) end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
 if shared.CheatEngineMode then shared.CLONEREF_BACKUP_MODE = true end
+shared.CLONEREF_BACKUP_MODE = CLONEREF_RESULT
+if shared.VoidDev then
+    print("clone result: "..tostring(shared.CLONEREF_BACKUP_MODE))
+end
 
 --[[task.spawn(function()
     pcall(function()
