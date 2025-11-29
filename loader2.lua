@@ -88,9 +88,6 @@ local loaderFile
 if data ~= nil and data.no then
     loaderFile = __def_table
 end
-if not shared.VoidDev then
-    loaderFile = __def_table
-end
 loaderFile = loaderFile or timedFunction(function()
     local data = game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VWExtra/3ec1c4abde539b3587265577e5c3dfe94d2f1b30/libraries/loader.lua", true)
     if data ~= nil then
