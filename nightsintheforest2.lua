@@ -196,5 +196,16 @@ task.spawn(function()
 end)
 
 local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "9071c542ec97cf37e78bda4427dea3d9be68a3c4"
+local suc, res = pcall(function()
+    local exec = identifyexecutor()
+    if not exec then return false end
+    exec = string.lower(tostring(exec))
+    if exec:find("xeno") then
+        return true
+    end
+end)
+if suc and res and shared.CustomCommit == nil then
+    commit = "68ac5d3e4e95dccc6608412bb0425e9b7f199a61"
+end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newnightsintheforest.lua", true))()
