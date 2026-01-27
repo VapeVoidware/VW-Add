@@ -206,6 +206,21 @@ local suc, res = pcall(function()
 end)
 if suc and res and shared.CustomCommit == nil then
     commit = "68ac5d3e4e95dccc6608412bb0425e9b7f199a61"
+    task.spawn(function()
+        pcall(function()
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "Voidware | Xeno",
+				Text = "Your executor currently doesn't support the newest version of the script!",
+				Duration = 10,
+			})
+            task.wait(0.5)
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "Voidware | Xeno",
+				Text = "For more info head over to discord.gg/voidware",
+				Duration = 10,
+			})
+        end)
+    end)
 end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newnightsintheforest.lua", true))()
