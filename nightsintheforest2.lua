@@ -19,10 +19,24 @@
 ]]
 if not game:IsLoaded() then return end
 local CheatEngineMode = false
-if (not getgenv) or (getgenv and type(getgenv) ~= "function") then CheatEngineMode = true end
-if getgenv and not getgenv().shared then CheatEngineMode = true; getgenv().shared = {}; end
-if getgenv and not getgenv().debug then CheatEngineMode = true; getgenv().debug = {traceback = function(string) return string end} end
-if getgenv and not getgenv().require then CheatEngineMode = true; end
+if (not getgenv) or (getgenv and type(getgenv) ~= "function") then
+	CheatEngineMode = true
+end
+if getgenv and not getgenv().shared then
+	CheatEngineMode = true
+	getgenv().shared = {}
+end
+if getgenv and not getgenv().debug then
+	CheatEngineMode = true
+	getgenv().debug = {
+		traceback = function(string)
+			return string
+		end,
+	}
+end
+if getgenv and not getgenv().require then
+	CheatEngineMode = true
+end
 if getgenv and getgenv().require and type(getgenv().require) ~= "function" then CheatEngineMode = true end
 local debugChecks = {
     Type = "table",
@@ -181,6 +195,6 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "4440dc446a396fcb19f17705bbdf3a453990d5f8"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "0f020113d28629d15c3c6fc257398f664c6dc893"
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/"..tostring(commit).."/newnightsintheforest.lua", true))()
