@@ -110,9 +110,9 @@ end, 5, function(suc, err)
     end)
 end)
 loaderFile.Colors.Gradient = {
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromHex("#c41e3a")),
-    ColorSequenceKeypoint.new(1, Color3.fromHex("#165b33"))
+	ColorSequenceKeypoint.new(0, Color3.fromHex("#ffd6e8")),
+	ColorSequenceKeypoint.new(0.5, Color3.fromHex("#ff8fab")),
+	ColorSequenceKeypoint.new(1, Color3.fromHex("#ff477e")),
 }
 local loader = loaderFile:Loader()
 shared.ACTIVE_LOADER = loader
