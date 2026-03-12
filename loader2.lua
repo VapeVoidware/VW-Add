@@ -114,6 +114,15 @@ loaderFile.Colors.Gradient = {
 	ColorSequenceKeypoint.new(0.5, Color3.fromHex("#ff8fab")),
 	ColorSequenceKeypoint.new(1, Color3.fromHex("#ff477e")),
 }
+pcall(function()
+    if tostring(shared.VOIDWARE_SCRIPT_TYPE) == "99_NIGHTS_7Z" then
+        loaderFile.Colors.Gradient = {
+            ColorSequenceKeypoint.new(0, Color3.fromHex("#e879f9")),
+            ColorSequenceKeypoint.new(0.5, Color3.fromHex("#c026d3")),
+            ColorSequenceKeypoint.new(1, Color3.fromHex("#7b2fff")),
+        }
+    end
+end)
 local loader = loaderFile:Loader()
 shared.ACTIVE_LOADER = loader
 loader:Connect(function(res)
