@@ -195,7 +195,7 @@ task.spawn(function()
     end)
 end)
 
-local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "c849585a630aafe9449b8610bf00b3af2d441ac6"
+local commit = shared.CustomCommit and tostring(shared.CustomCommit) or shared.StagingMode and "staging" or "3f69683b400710b2dc234dd0a5454e40eccae108"
 --[[local suc, res = pcall(function()
     local exec = identifyexecutor()
     if not exec then return false end
